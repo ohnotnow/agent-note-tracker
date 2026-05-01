@@ -133,7 +133,7 @@ JSON by default, because that's what agents and pipelines want. If you're
 the one reading the output, `ant list --human` gives you a tabular view,
 `--long` includes the full bodies, and `ant export` produces markdown.
 
-## `ant delete <id> --force`
+## ant delete sneakyness
 
 `ant delete <id>` won't actually delete anything by itself. That's on
 purpose — it's far too easy to nuke the wrong entry from a shell loop.
