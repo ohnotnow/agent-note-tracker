@@ -1,6 +1,9 @@
 package ant
 
 import (
+	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -134,5 +137,85 @@ func TestEdit_RequiresOneArg(t *testing.T) {
 	initDemo(t, ta, "demo")
 	if err := ta.Dispatch("edit", []string{"--body", "x"}); err == nil {
 		t.Error("expected usage error with no positional arg")
+	}
+}
+
+// fakeEditorScript writes a small shell script that overwrites its argument
+// with the given content and returns its path. Used to drive --visual tests
+// without needing a real interactive editor.
+func fakeEditorScript(t *testing.T, content string) string {
+	t.Helper()
+	dir := t.TempDir()
+	path := filepath.Join(dir, "fake-editor.sh")
+	body := "#!/bin/sh\nprintf %s " + shellQuote(content) + " > \"$1\"\n"
+	if err := os.WriteFile(path, []byte(body), 0o755); err != nil {
+		t.Fatalf("write fake editor: %v", err)
+	}
+	return path
+}
+
+func shellQuote(s string) string {
+	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
+}
+
+func TestEdit_VisualEditor_UpdatesBody(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("--visual test uses a POSIX shell script as the fake editor")
+	}
+	t.Setenv("EDITOR", fakeEditorScript(t, "edited via fake editor"))
+
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	id := addAndID(t, ta, "--body", "original body")
+
+	var got Entry
+	ta.run(t, &got, "edit", id, "--visual")
+	if got.Body != "edited via fake editor" {
+		t.Errorf("body = %q, want 'edited via fake editor'", got.Body)
+	}
+}
+
+func TestEdit_VisualEditor_RejectsEmptyResult(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("--visual test uses a POSIX shell script as the fake editor")
+	}
+	t.Setenv("EDITOR", fakeEditorScript(t, ""))
+
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	id := addAndID(t, ta, "--body", "original")
+
+	if err := ta.Dispatch("edit", []string{id, "--visual"}); err == nil {
+		t.Error("expected error when editor produces an empty body")
+	}
+}
+
+func TestEdit_VisualEditor_NoChangeIsNoop(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("--visual test uses a POSIX shell script as the fake editor")
+	}
+	t.Setenv("EDITOR", fakeEditorScript(t, "untouched"))
+
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	id := addAndID(t, ta, "--body", "untouched")
+
+	var before Entry
+	ta.run(t, &before, "show", id)
+
+	var got Entry
+	ta.run(t, &got, "edit", id, "--visual")
+	if got.UpdatedAt != before.UpdatedAt {
+		t.Errorf("updated_at changed despite no body change: before=%q after=%q",
+			before.UpdatedAt, got.UpdatedAt)
+	}
+}
+
+func TestEdit_VisualAndBody_Conflict(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	id := addAndID(t, ta, "--body", "x")
+	if err := ta.Dispatch("edit", []string{id, "--visual", "--body", "y"}); err == nil {
+		t.Error("expected error when --visual and --body are combined")
 	}
 }

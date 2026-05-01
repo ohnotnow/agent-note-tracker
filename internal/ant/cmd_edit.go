@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -37,11 +38,13 @@ func (a *App) Edit(args []string) error {
 		title   string
 		kind    string
 		issue   string
+		visual  bool
 	)
 	fs.StringVar(&bodyArg, "body", "", "new body, or @<path> to read from a file")
 	fs.StringVar(&title, "title", "", "new title (empty clears)")
 	fs.StringVar(&kind, "kind", "", "new kind")
 	fs.StringVar(&issue, "issue", "", "new issue id (empty clears)")
+	fs.BoolVar(&visual, "visual", false, "open $EDITOR with the current body")
 	if err := fs.Parse(flagArgs); err != nil {
 		return err
 	}
@@ -50,15 +53,44 @@ func (a *App) Edit(args []string) error {
 	}
 
 	set := setFlags(fs)
+	if visual && set["body"] {
+		return fmt.Errorf("--visual and --body are mutually exclusive")
+	}
 
-	var update EntryUpdate
-
-	body, bodyChanged, err := a.resolveEditBody(bodyArg, set["body"])
+	store, _, err := a.requireInitialised()
 	if err != nil {
 		return err
 	}
-	if bodyChanged {
-		update.Body = &body
+
+	var update EntryUpdate
+
+	switch {
+	case visual:
+		current, err := store.GetEntry(id)
+		if err != nil {
+			if errors.Is(err, ErrNotFound) {
+				return fmt.Errorf("no entry with id %q", id)
+			}
+			return err
+		}
+		edited, err := openInEditor(current.Body)
+		if err != nil {
+			return err
+		}
+		if edited == "" {
+			return fmt.Errorf("editor produced an empty body; refusing to save")
+		}
+		if edited != current.Body {
+			update.Body = &edited
+		}
+	default:
+		body, bodyChanged, berr := a.resolveEditBody(bodyArg, set["body"])
+		if berr != nil {
+			return berr
+		}
+		if bodyChanged {
+			update.Body = &body
+		}
 	}
 	if set["title"] {
 		update.Title = &title
@@ -70,10 +102,6 @@ func (a *App) Edit(args []string) error {
 		update.IssueID = &issue
 	}
 
-	store, _, err := a.requireInitialised()
-	if err != nil {
-		return err
-	}
 	entry, err := store.UpdateEntry(id, update)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
@@ -119,6 +147,48 @@ func setFlags(fs *flag.FlagSet) map[string]bool {
 	out := make(map[string]bool)
 	fs.Visit(func(f *flag.Flag) { out[f.Name] = true })
 	return out
+}
+
+// openInEditor writes initial to a temp file, runs $EDITOR (or vi), and
+// returns the resulting content with trailing whitespace trimmed. The
+// editor inherits the real terminal's stdin/stdout/stderr — this is the
+// one place in ant where we deliberately bypass App.Stdin/Stdout, because
+// interactive editors need a real tty.
+func openInEditor(initial string) (string, error) {
+	editor := strings.TrimSpace(os.Getenv("EDITOR"))
+	if editor == "" {
+		editor = "vi"
+	}
+
+	f, err := os.CreateTemp("", "ant-edit-*.md")
+	if err != nil {
+		return "", fmt.Errorf("create temp file: %w", err)
+	}
+	path := f.Name()
+	defer os.Remove(path)
+	if _, err := f.WriteString(initial); err != nil {
+		f.Close()
+		return "", fmt.Errorf("write temp file: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return "", err
+	}
+
+	parts := strings.Fields(editor)
+	cmdArgs := append(parts[1:], path)
+	cmd := exec.Command(parts[0], cmdArgs...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return "", fmt.Errorf("editor %q exited with error: %w", editor, err)
+	}
+
+	out, err := os.ReadFile(path)
+	if err != nil {
+		return "", fmt.Errorf("read edited body: %w", err)
+	}
+	return strings.TrimRight(string(out), "\n\r\t "), nil
 }
 
 // editStringFlags lists the flag names that consume a value, so

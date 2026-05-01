@@ -1,12 +1,15 @@
 # ant — Agent Notebook Tool
 
-`ant` is a local-first notebook for the **why** of a project: design
-decisions, alternatives evaluated and rejected, pivots taken, the
-conversational nuance that disappears when an issue closes.
+> **Status: work-in-progress (v0.x).** The CLI and the on-disk schema are
+> both still moving. Pin a tagged version if you're going to depend on it.
 
-It is the sibling of [ait](https://github.com/Ohffs/ait): where ait tracks
-*open work* (issues, dependencies, what's ready next), `ant` tracks the
-*durable record* of decisions made along the way.
+`ant` is a small local notebook for the **why** of a project. The design
+decisions, the alternatives you tried and binned, the awkward pivots, the
+bit of context that vanishes the moment an issue gets closed.
+
+It's the sibling of [ait](https://github.com/ohnotnow/agent-issue-tracker).
+Where ait keeps track of the *open work* — issues, dependencies, what's
+ready to pick up next — `ant` keeps the *paper trail* of how you got here.
 
 ```
 $ ant add --kind adr --title "Choose sqlite" --issue ait-AbCdE.2 \
@@ -27,22 +30,27 @@ $ ant recent
 
 ## Why it exists
 
-`ait flush --summary` leaves a small breadcrumb when issues are cleared.
-But coming back to a project weeks or months later, those breadcrumbs
-aren't enough — you want to know *why* a library was picked, *why* a
-refactor went the way it did, *why* an approach was abandoned. A free-form
-`NOTEBOOK.md` works for a while but scales badly: by the time it matters,
-asking an agent to read thousands of lines is signal-to-noise collapse.
+`ait flush --summary` leaves a tiny breadcrumb when you clear issues out.
+That's fine in the moment, but it's not much help when you come back to a
+project six months later wondering why on earth you picked *this* library,
+or why a refactor went sideways, or why you abandoned an approach that
+sounds perfectly reasonable in hindsight.
 
-`ant` keeps capture cheap and recall targeted. The agent pulls the right
-few entries when it needs them, instead of re-reading the whole notebook.
+I tried a free-form `NOTEBOOK.md` for a while. It works, right up until
+it doesn't — by the time the notebook actually matters it's thousands of
+lines long, and asking an agent to wade through the lot is just noise.
+
+`ant` is the lazy fix for that. Adding an entry is a one-liner, and when
+the agent needs context later it can pull the handful of entries that
+actually relate to whatever it's working on, rather than re-reading
+everything you've ever written down.
 
 ## Install
 
 Build from source — Go 1.25+:
 
 ```sh
-go install github.com/Ohffs/ant@latest      # once published
+go install github.com/ohnotnow/agent-note-tracker@latest      # once tagged
 # or, in this checkout:
 go build -o ant .
 ```
@@ -71,34 +79,35 @@ ant export --json                    # JSON instead of markdown
 
 ## Personal by default
 
-The database lives at `.ant/ant.db` at the git repo root. `ant init` adds
-`.ant/` to `.gitignore` automatically.
+The database lives at `.ant/ant.db` at the git repo root, and `ant init`
+quietly adds `.ant/` to `.gitignore` for you.
 
-That's deliberate: many entries are personal working memory — preferences,
-"just ship it" pressure decisions, throwaway thoughts. They don't all need
-to be team artefacts. When something earns it, promote it with `ant
-export`: pipe the markdown into a PR description, save it as a docs file,
-share it as a gist.
+That's on purpose. A lot of what ends up in here is personal working
+memory: preferences, half-formed grumbles, "fine, just ship it" decisions
+made at 5pm on a Friday. None of that needs to be a team artefact. When
+something does earn its place — an actual ADR, a useful post-mortem —
+promote it with `ant export` and pipe the markdown wherever it belongs:
+a PR description, a docs file, a gist.
 
 ## Conventional kinds
 
-Three named conventions to start with — the schema doesn't enforce them, so
-projects can grow their own:
+There are three named kinds to start with. The schema doesn't enforce
+them, so feel free to invent your own as a project grows:
 
 | Kind | When to use |
 | --- | --- |
 | `note` (default) | Captured thoughts, observations, short rationales. The bulk of entries. |
-| `adr` | Architecture Decision Records — load-bearing choices worth recording properly. |
+| `adr` | Architecture Decision Records — load-bearing choices worth writing down properly. |
 | `pivot` | Changes of direction: "we tried X, here's why we moved on". |
 
-Promote a `note` to an `adr` later with `ant edit --kind adr <id>` if it
-turns out to matter.
+If a `note` turns out to matter more than you thought, promote it later
+with `ant edit --kind adr <id>`.
 
 ## Linking to issue trackers
 
-`--issue` is a free-form string — `ant` doesn't validate or resolve it. Use
-ait ids if you use ait, Jira/Linear/GitHub ids otherwise. `ant for <id>`
-will return entries with an exact match.
+`--issue` is a free-form string. `ant` won't validate or resolve it, so
+use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
+`ant for <id>` returns entries with an exact match — nothing fancier.
 
 ## Command reference
 
@@ -120,15 +129,16 @@ will return entries with an exact match.
 
 ## Output
 
-JSON by default — agent-friendly and pipe-friendly. `ant list --human`
-gives a tabular view for humans; `--long` includes full bodies; `ant
-export` produces markdown.
+JSON by default, because that's what agents and pipelines want. If you're
+the one reading the output, `ant list --human` gives you a tabular view,
+`--long` includes the full bodies, and `ant export` produces markdown.
 
 ## `ant delete <id> --force`
 
-`ant delete <id>` deliberately refuses to act on its own. It prints a
-warning to stderr describing what *would* be deleted, exits non-zero, and
-leaves the database alone:
+`ant delete <id>` won't actually delete anything by itself. That's on
+purpose — it's far too easy to nuke the wrong entry from a shell loop.
+Run it without `--force` and it just prints a warning to stderr saying
+what it *would* have deleted, exits non-zero, and leaves the DB alone:
 
 ```sh
 $ ant delete ant-AkRXV
@@ -143,10 +153,10 @@ $ ant delete ant-AkRXV --force
 { "id": "ant-AkRXV", ... }
 ```
 
-The deleted record echoes to stdout so the action is visible in
-scrollback. Soft-delete is intentionally not implemented — entries are
-either present or gone, with no recovery beyond your shell history and
-backups.
+The deleted record gets echoed to stdout on the way out, so at least
+there's something in your scrollback if you immediately regret it. There's
+no soft-delete by design: entries are either there or they're not, and
+recovery means your shell history or your backups.
 
 ## `--db <path>`
 
@@ -154,9 +164,9 @@ backups.
 ant --db /path/to/other.db <command>
 ```
 
-Useful for scratch databases, testing, or operating across worktrees. The
-special path `:memory:` opens an in-memory SQLite instance (used by the
-test suite).
+Handy for scratch databases, testing, or hopping between worktrees. The
+special path `:memory:` opens an in-memory SQLite instance, which is what
+the test suite uses.
 
 ## Build
 
@@ -188,4 +198,4 @@ claude/SKILL.md                 Claude Code skill documentation
 
 ## License
 
-TBD.
+MIT — see [LICENSE](LICENSE).
