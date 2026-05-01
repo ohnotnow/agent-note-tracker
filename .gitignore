@@ -1,0 +1,7 @@
+/agent-note-tracker
+*.exe
+.env
+.ant/
+.ait/
+/ant
+ANT_PLAN.md
