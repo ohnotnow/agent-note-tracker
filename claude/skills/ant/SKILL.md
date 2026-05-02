@@ -14,6 +14,21 @@ The database lives at `.ant/ant.db`, gitignored by default. Notes are
 developer-personal working memory; they can be promoted to project
 documentation later via `ant export`.
 
+## At the start of every session
+
+If the project has an `ant` database, run `ant foundation` early. It
+returns the project's single load-bearing vision entry — what the
+project is, what it isn't, the spirit you're meant to be working in.
+Read it before you start making judgement calls about design, wording,
+or trade-offs. If it prints "no foundation recorded", proceed without
+it — most projects won't have one.
+
+After a project ideation/vision discussion that produced a shared sense
+of what the project is and isn't, offer to capture it as the foundation
+entry: `ant add --kind foundation --body @path/to/notes.md`. There can
+only be one — `add` will refuse a second, and you revise the existing
+one with `ant edit` instead.
+
 ## When to reach for it
 
 Lean conservative — capture entries when the *why* would be hard to
@@ -25,6 +40,9 @@ reconstruct from the code alone:
 - **An evaluation between options ended in a pick**: "we tried X but went
   with Y because…".
 - **A pivot or library swap**: moving away from one approach to another.
+- **A project ideation phase wrapped up**: the moment after you've
+  agreed on what the project is, before any code is written, is the
+  right time to capture a `foundation` entry.
 
 You don't need to capture every small detail — favour fewer high-value
 entries over a stream-of-consciousness log. If in doubt, ask the user.
@@ -43,6 +61,10 @@ with three named conventions keeps the notebook navigable:
   didn't pan out, here's why we moved on". Often shorter than an ADR but
   worth distinguishing because pivots tell future-you "don't reconsider this
   unless conditions changed".
+- **`foundation`** — The project's single vision document (one per
+  project, enforced). What this project is and isn't, in the spirit of
+  a design doc agreed before code was written. Read it at session
+  start; capture one only after a clear ideation/vision discussion.
 
 Promote a `note` to an `adr` later (`ant edit --kind adr <id>`) if it turns
 out to matter.
@@ -71,6 +93,7 @@ for `ant show <id>` when you need the full body.
 
 | Moment | Command |
 | --- | --- |
+| **Session start** — "what does this project care about?" | `ant foundation` |
 | **Session start** — "what did we decide recently?" | `ant recent --limit 5` |
 | **Touching an area** — "any prior decisions here?" | `ant search "auth"` |
 | **Evaluating a library** — "have we looked at this before?" | `ant search "spatie"` |

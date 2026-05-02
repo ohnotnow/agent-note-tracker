@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -27,6 +29,7 @@ Commands:
   recent      Show the most recent entries
   search      Search entries by query
   for         Show entries linked to an issue id
+  foundation  Show the project's foundation entry (singleton)
   export      Export entries as markdown or JSON
   version     Print the build version
   completion  Print a shell completion script
@@ -35,10 +38,18 @@ Use 'ant <command> --help' for command-specific help.
 `
 
 func main() {
-	if err := run(os.Args[1:]); err != nil {
-		fmt.Fprintf(os.Stderr, "ant: %v\n", err)
-		os.Exit(1)
+	err := run(os.Args[1:])
+	if err == nil {
+		return
 	}
+	// '--help' on a subcommand returns flag.ErrHelp after the FlagSet has
+	// already printed its usage block. Treat it as a successful, requested
+	// help dump rather than a CLI error.
+	if errors.Is(err, flag.ErrHelp) {
+		return
+	}
+	fmt.Fprintf(os.Stderr, "ant: %v\n", err)
+	os.Exit(1)
 }
 
 func run(args []string) error {

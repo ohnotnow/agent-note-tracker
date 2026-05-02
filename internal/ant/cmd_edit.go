@@ -27,9 +27,6 @@ func (a *App) Edit(args []string) error {
 	if err != nil {
 		return fmt.Errorf("%w: usage: ant edit <id> [flags]", err)
 	}
-	if id == "" {
-		return fmt.Errorf("usage: ant edit <id> [flags]")
-	}
 
 	fs := flag.NewFlagSet("edit", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
@@ -45,8 +42,15 @@ func (a *App) Edit(args []string) error {
 	fs.StringVar(&kind, "kind", "", "new kind")
 	fs.StringVar(&issue, "issue", "", "new issue id (empty clears)")
 	fs.BoolVar(&visual, "visual", false, "open $EDITOR with the current body")
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [flags]")
+		fs.PrintDefaults()
+	}
 	if err := fs.Parse(flagArgs); err != nil {
 		return err
+	}
+	if id == "" {
+		return fmt.Errorf("usage: ant edit <id> [flags]")
 	}
 	if fs.NArg() != 0 {
 		return fmt.Errorf("usage: ant edit <id> [flags]")

@@ -41,6 +41,19 @@ func (s *Store) InsertEntry(prefix string, e NewEntry) (Entry, error) {
 	}
 	defer func() { _ = tx.Rollback() }()
 
+	if e.Kind == KindFoundation {
+		var existing string
+		err := tx.QueryRow(`SELECT public_id FROM entries WHERE kind = ? LIMIT 1`, KindFoundation).Scan(&existing)
+		switch {
+		case err == nil:
+			return Entry{}, fmt.Errorf("a foundation entry already exists (%s); use 'ant edit %s' to revise it", existing, existing)
+		case errors.Is(err, sql.ErrNoRows):
+			// fine, no existing foundation
+		default:
+			return Entry{}, fmt.Errorf("check existing foundation: %w", err)
+		}
+	}
+
 	var nextID int64
 	if err := tx.QueryRow(`SELECT COALESCE(MAX(id), 0) + 1 FROM entries`).Scan(&nextID); err != nil {
 		return Entry{}, fmt.Errorf("compute next id: %w", err)

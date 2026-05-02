@@ -110,6 +110,8 @@ func (a *App) Dispatch(cmd string, args []string) error {
 		return a.Search(args)
 	case "for":
 		return a.For(args)
+	case "foundation":
+		return a.Foundation(args)
 	case "export":
 		return a.Export(args)
 	case "version":

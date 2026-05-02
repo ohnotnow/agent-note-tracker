@@ -43,6 +43,10 @@ func (a *App) Export(args []string) error {
 	fs.StringVar(&issue, "issue", "", "filter by issue id")
 	fs.StringVar(&sinceIn, "since", "", "created_at >= this date (YYYY-MM-DD or RFC3339)")
 	fs.BoolVar(&asJSON, "json", false, "emit a JSON array instead of markdown")
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant export [<id>] [--kind <k>] [--issue <id>] [--since <date>] [--json]")
+		fs.PrintDefaults()
+	}
 	if err := fs.Parse(flagArgs); err != nil {
 		return err
 	}

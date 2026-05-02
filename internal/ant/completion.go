@@ -12,11 +12,11 @@ _ant_complete() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     if [ "${COMP_CWORD}" -eq 1 ]; then
-        COMPREPLY=( $(compgen -W "init config add show edit delete list recent search for export version completion" -- "${cur}") )
+        COMPREPLY=( $(compgen -W "init config add show edit delete list recent search for foundation export version completion" -- "${cur}") )
         return
     fi
     case "${prev}" in
-        --kind)  COMPREPLY=( $(compgen -W "note adr pivot" -- "${cur}") ) ;;
+        --kind)  COMPREPLY=( $(compgen -W "note adr pivot foundation" -- "${cur}") ) ;;
         completion) COMPREPLY=( $(compgen -W "bash zsh" -- "${cur}") ) ;;
     esac
 }
@@ -37,11 +37,12 @@ _ant() {
         'recent:show the most recent entries'
         'search:search entries by query'
         'for:show entries linked to an issue id'
+        'foundation:show the project foundation entry'
         'export:render entries as markdown or JSON'
         'version:print the build version'
         'completion:print a shell completion script'
     )
-    kinds=(note adr pivot)
+    kinds=(note adr pivot foundation)
 
     _arguments -C \
         '1: :->cmds' \
@@ -55,7 +56,7 @@ _ant() {
                 add|edit) _arguments \
                     '--body[entry body or @file]:body:' \
                     '--title[entry title]:title:' \
-                    '--kind[entry kind]:kind:(note adr pivot)' \
+                    '--kind[entry kind]:kind:(note adr pivot foundation)' \
                     '--issue[linked issue id]:issue:' ;;
             esac
             ;;
@@ -69,6 +70,9 @@ _ant "$@"
 func (a *App) Completion(args []string) error {
 	fs := flag.NewFlagSet("completion", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant completion {bash|zsh}")
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

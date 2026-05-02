@@ -21,15 +21,19 @@ func (a *App) Delete(args []string) error {
 	if err != nil {
 		return fmt.Errorf("%w: usage: ant delete <id>", err)
 	}
-	if id == "" {
-		return fmt.Errorf("usage: ant delete <id>")
-	}
 	fs := flag.NewFlagSet("delete", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
 	var force bool
 	fs.BoolVar(&force, "force", false, "permanently delete the entry")
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant delete <id> [--force]")
+		fs.PrintDefaults()
+	}
 	if err := fs.Parse(flagArgs); err != nil {
 		return err
+	}
+	if id == "" {
+		return fmt.Errorf("usage: ant delete <id>")
 	}
 	if fs.NArg() != 0 {
 		return fmt.Errorf("usage: ant delete <id>")

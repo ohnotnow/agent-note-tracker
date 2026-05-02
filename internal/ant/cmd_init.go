@@ -34,6 +34,10 @@ func (a *App) Init(args []string) error {
 	fs.SetOutput(a.Stderr)
 	var explicitPrefix string
 	fs.StringVar(&explicitPrefix, "prefix", "", "set the issue-id prefix")
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant init [--prefix <name>]")
+		fs.PrintDefaults()
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

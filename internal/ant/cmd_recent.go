@@ -13,6 +13,10 @@ func (a *App) Recent(args []string) error {
 	fs.SetOutput(a.Stderr)
 	limit := 5
 	fs.IntVar(&limit, "limit", limit, "maximum number of entries to return")
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant recent [--limit <n>]")
+		fs.PrintDefaults()
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

@@ -31,6 +31,10 @@ func (a *App) List(args []string) error {
 	fs.StringVar(&kind, "kind", "", "filter by kind")
 	fs.StringVar(&issue, "issue", "", "filter by issue id")
 	fs.StringVar(&sinceIn, "since", "", "created_at >= this date (YYYY-MM-DD or RFC3339)")
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant list [--long | --human] [--kind <k>] [--issue <id>] [--since <date>]")
+		fs.PrintDefaults()
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

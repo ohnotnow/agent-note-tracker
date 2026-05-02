@@ -14,6 +14,10 @@ import (
 func (a *App) For(args []string) error {
 	fs := flag.NewFlagSet("for", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant for <issue-id>")
+		fmt.Fprintln(a.Stderr, "  Returns entries whose issue_id exactly matches the argument.")
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

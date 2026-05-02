@@ -27,8 +27,12 @@ func (a *App) Add(args []string) error {
 	)
 	fs.StringVar(&bodyArg, "body", "", "entry body, or @<path> to read from a file")
 	fs.StringVar(&title, "title", "", "optional title")
-	fs.StringVar(&kind, "kind", KindNote, "entry kind (note|adr|pivot|...)")
+	fs.StringVar(&kind, "kind", KindNote, "entry kind (note|adr|pivot|foundation|...)")
 	fs.StringVar(&issue, "issue", "", "linked issue id (free-form)")
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant add (--body <text> | --body @<file> | stdin) [--title <s>] [--kind <k>] [--issue <id>]")
+		fs.PrintDefaults()
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

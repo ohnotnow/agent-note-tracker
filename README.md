@@ -91,7 +91,7 @@ a PR description, a docs file, a gist.
 
 ## Conventional kinds
 
-There are three named kinds to start with. The schema doesn't enforce
+There are four named kinds to start with. The schema doesn't enforce
 them, so feel free to invent your own as a project grows:
 
 | Kind | When to use |
@@ -99,9 +99,40 @@ them, so feel free to invent your own as a project grows:
 | `note` (default) | Captured thoughts, observations, short rationales. The bulk of entries. |
 | `adr` | Architecture Decision Records — load-bearing choices worth writing down properly. |
 | `pivot` | Changes of direction: "we tried X, here's why we moved on". |
+| `foundation` | The single core vision document for the project. Singleton — one per project. |
 
 If a `note` turns out to matter more than you thought, promote it later
 with `ant edit --kind adr <id>`.
+
+## Project foundation
+
+The `foundation` kind is special. It's the one entry that captures the
+*essence* of a project — what it is, what it isn't, the load-bearing
+ideas an agent (or future-you) needs to read before making judgement
+calls about design, wording, and trade-offs.
+
+A project has at most one. `ant add --kind foundation` refuses if one
+already exists; revise it with `ant edit` instead.
+
+```sh
+$ ant add --kind foundation --title "ant — vision" --body @ANT_PLAN.md
+
+$ ant foundation
+{
+  "id": "ant-AkRXV",
+  "kind": "foundation",
+  "title": "ant — vision",
+  "body": "...the full text, untruncated..."
+}
+```
+
+`ant foundation` returns the full body (no snippet) — this is the one
+read path where truncation would defeat the goal. If no foundation has
+been recorded, it exits non-zero with a hint.
+
+The DB is gitignored, so foundation revisions are lossy. If you want a
+history of how the vision evolved, render it to markdown periodically
+(`ant export <id>`) and commit that file alongside the code.
 
 ## Linking to issue trackers
 
@@ -123,8 +154,9 @@ use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
 | `ant recent [--limit N]` | N most recent entries with body snippets |
 | `ant search <query>` | Case-insensitive AND-of-terms across title + body |
 | `ant for <issue-id>` | Entries linked to a specific issue id (exact match) |
+| `ant foundation` | Print the project's foundation entry, if one has been recorded |
 | `ant export [<id>]` | Render entries as markdown; `--json` for JSON |
-| `ant version` | Print the build version |
+| `ant version` | Print the build version (and check GitHub for newer releases) |
 | `ant completion {bash,zsh}` | Print a shell completion script |
 
 ## Output
@@ -176,6 +208,11 @@ go build -o ant .
 # with a stamped version
 go build -ldflags "-X agent-note-tracker/internal/ant.Version=v0.1.0" -o ant .
 ```
+
+A stamped (non-`dev`) build will, on `ant version`, do a best-effort
+GitHub check against the latest tagged release and let you know if a
+newer one is available. The check has a 5-second timeout and fails
+silently — offline use is unaffected.
 
 ## Layout
 

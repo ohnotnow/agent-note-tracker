@@ -11,6 +11,10 @@ import (
 func (a *App) Show(args []string) error {
 	fs := flag.NewFlagSet("show", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant show <id>")
+		fmt.Fprintln(a.Stderr, "  Print the full record for one entry as JSON.")
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

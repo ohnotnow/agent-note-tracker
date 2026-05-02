@@ -15,6 +15,10 @@ import (
 func (a *App) Search(args []string) error {
 	fs := flag.NewFlagSet("search", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant search <query> [more terms...]")
+		fmt.Fprintln(a.Stderr, "  Multi-term queries are ANDed across title and body, case-insensitive.")
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}

@@ -17,10 +17,15 @@ type Entry struct {
 
 // Conventional kinds documented for the Claude Code skill. The schema does
 // not enforce these — kind is a free string so projects can grow their own.
+//
+// KindFoundation is special: it's a singleton (one per project) enforced in
+// InsertEntry. The intent is a single load-bearing "what this project is"
+// entry that an agent reads at session start to anchor judgement calls.
 const (
-	KindNote  = "note"
-	KindADR   = "adr"
-	KindPivot = "pivot"
+	KindNote       = "note"
+	KindADR        = "adr"
+	KindPivot      = "pivot"
+	KindFoundation = "foundation"
 )
 
 // SnippetLen is the body-snippet length used by 'recent' and 'search'. The

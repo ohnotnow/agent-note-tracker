@@ -1,6 +1,9 @@
 package ant
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+)
 
 // ConfigResult is the JSON payload emitted by 'ant config'.
 type ConfigResult struct {
@@ -15,6 +18,9 @@ type ConfigResult struct {
 func (a *App) Config(args []string) error {
 	fs := flag.NewFlagSet("config", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
+	fs.Usage = func() {
+		fmt.Fprintln(a.Stderr, "usage: ant config")
+	}
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
