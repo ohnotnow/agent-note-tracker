@@ -20,8 +20,16 @@ If the project has an `ant` database, run `ant foundation` early. It
 returns the project's single load-bearing vision entry — what the
 project is, what it isn't, the spirit you're meant to be working in.
 Read it before you start making judgement calls about design, wording,
-or trade-offs. If it prints "no foundation recorded", proceed without
-it — most projects won't have one.
+or trade-offs.
+
+If `ant foundation` reports no foundation recorded *and* the project
+shows signs of being established (a populated `CLAUDE.md`, a real
+`README.md`, non-trivial git history), offer to backfill one with the
+user. If they agree, read
+[BACKFILL_FOUNDATION.md](./BACKFILL_FOUNDATION.md) and follow the Q&A
+flow there. If they'd rather not — or the project is brand new and
+hasn't had its ideation discussion yet — drop it and carry on. Most
+projects won't have a foundation and that's fine.
 
 After a project ideation/vision discussion that produced a shared sense
 of what the project is and isn't, offer to capture it as the foundation
