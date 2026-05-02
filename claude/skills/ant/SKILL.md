@@ -86,6 +86,9 @@ ant add --title "Choose sqlite" --kind adr --issue ait-AbCdE.2 \
 `--issue` is free-form; if you use ait it'll match an ait id, but Jira /
 Linear / GitHub ids work just as well — ant doesn't validate the value.
 
+For non-trivial bodies, write a temp file and use @file; heredocs are fragile 
+when the body contains backticks.
+
 ## Recall — the four read-side moments
 
 These are when ant earns its keep. Each returns slim JSON by default; reach
