@@ -24,13 +24,15 @@ func (a *App) Add(args []string) error {
 		title   string
 		kind    string
 		issue   string
+		long    bool
 	)
 	fs.StringVar(&bodyArg, "body", "", "entry body, or @<path> to read from a file")
 	fs.StringVar(&title, "title", "", "optional title")
 	fs.StringVar(&kind, "kind", KindNote, "entry kind (note|adr|pivot|foundation|...)")
 	fs.StringVar(&issue, "issue", "", "linked issue id (free-form)")
+	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
 	fs.Usage = func() {
-		fmt.Fprintln(a.Stderr, "usage: ant add (--body <text> | --body @<file> | stdin) [--title <s>] [--kind <k>] [--issue <id>]")
+		fmt.Fprintln(a.Stderr, "usage: ant add (--body <text> | --body @<file> | stdin) [--title <s>] [--kind <k>] [--issue <id>] [--long]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(args); err != nil {
@@ -42,7 +44,7 @@ func (a *App) Add(args []string) error {
 		return err
 	}
 	if body == "" {
-		return fmt.Errorf("body is empty (use --body, --body @file, or pipe via stdin)")
+		return NewError(CodeValidationError, "body is empty (use --body, --body @file, or pipe via stdin)")
 	}
 
 	store, _, err := a.requireInitialised()
@@ -63,7 +65,10 @@ func (a *App) Add(args []string) error {
 	if err != nil {
 		return err
 	}
-	return a.writeJSON(entry)
+	if long {
+		return a.writeJSON(entry)
+	}
+	return a.writeJSON(entry.Slim())
 }
 
 // resolveBody applies the body-source precedence rules described on Add.

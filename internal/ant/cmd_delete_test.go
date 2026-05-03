@@ -32,7 +32,7 @@ func TestDelete_WithForce_RemovesRowAndEchoesIt(t *testing.T) {
 	id := addAndID(t, ta, "--title", "Goodbye")
 
 	var got Entry
-	ta.run(t, &got, "delete", id, "--force")
+	ta.run(t, &got, "delete", "--force", "--long", id)
 	if got.PublicID != id {
 		t.Errorf("echoed id = %q, want %q", got.PublicID, id)
 	}

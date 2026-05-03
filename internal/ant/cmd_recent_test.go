@@ -12,8 +12,7 @@ func TestRecent_DefaultLimit5(t *testing.T) {
 		ta.run(t, nil, "add", "--body", "body")
 	}
 
-	var got []EntryWithSnippet
-	ta.run(t, &got, "recent")
+	got := runList[EntryWithSnippet](t, ta, "recent")
 	if len(got) != 5 {
 		t.Fatalf("len = %d, want 5", len(got))
 	}
@@ -26,8 +25,7 @@ func TestRecent_CustomLimit(t *testing.T) {
 		ta.run(t, nil, "add", "--body", "body")
 	}
 
-	var got []EntryWithSnippet
-	ta.run(t, &got, "recent", "--limit", "2")
+	got := runList[EntryWithSnippet](t, ta, "recent", "--limit", "2")
 	if len(got) != 2 {
 		t.Fatalf("len = %d, want 2", len(got))
 	}
@@ -39,8 +37,7 @@ func TestRecent_IncludesSnippet(t *testing.T) {
 	long := strings.Repeat("x", 500)
 	ta.run(t, nil, "add", "--body", long)
 
-	var got []EntryWithSnippet
-	ta.run(t, &got, "recent")
+	got := runList[EntryWithSnippet](t, ta, "recent")
 	if len(got) != 1 {
 		t.Fatalf("len = %d, want 1", len(got))
 	}
@@ -58,8 +55,7 @@ func TestRecent_ShortBodyHasNoEllipsis(t *testing.T) {
 	initDemo(t, ta, "demo")
 	ta.run(t, nil, "add", "--body", "short")
 
-	var got []EntryWithSnippet
-	ta.run(t, &got, "recent")
+	got := runList[EntryWithSnippet](t, ta, "recent")
 	if len(got) != 1 {
 		t.Fatalf("len = %d, want 1", len(got))
 	}

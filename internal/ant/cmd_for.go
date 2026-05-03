@@ -22,7 +22,7 @@ func (a *App) For(args []string) error {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return fmt.Errorf("usage: ant for <issue-id>")
+		return NewError(CodeValidationError, "usage: ant for <issue-id>")
 	}
 	issue := fs.Arg(0)
 
@@ -39,5 +39,5 @@ func (a *App) For(args []string) error {
 	for i, e := range entries {
 		out[i] = e.Slim()
 	}
-	return a.writeJSON(out)
+	return a.writeEntries(out)
 }

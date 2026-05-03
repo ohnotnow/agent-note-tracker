@@ -17,8 +17,7 @@ func TestList_DefaultSlim(t *testing.T) {
 	ta := newTestApp(t)
 	seedEntries(t, ta)
 
-	var got []EntrySlim
-	ta.run(t, &got, "list")
+	got := runList[EntrySlim](t, ta, "list")
 	if len(got) != 3 {
 		t.Fatalf("len(list) = %d, want 3", len(got))
 	}
@@ -33,8 +32,7 @@ func TestList_LongIncludesBody(t *testing.T) {
 	ta := newTestApp(t)
 	seedEntries(t, ta)
 
-	var got []Entry
-	ta.run(t, &got, "list", "--long")
+	got := runList[Entry](t, ta, "list", "--long")
 	if len(got) != 3 {
 		t.Fatalf("len = %d, want 3", len(got))
 	}
@@ -49,8 +47,7 @@ func TestList_FilterKind(t *testing.T) {
 	ta := newTestApp(t)
 	seedEntries(t, ta)
 
-	var got []EntrySlim
-	ta.run(t, &got, "list", "--kind", "adr")
+	got := runList[EntrySlim](t, ta, "list", "--kind", "adr")
 	if len(got) != 1 {
 		t.Fatalf("len = %d, want 1", len(got))
 	}
@@ -63,8 +60,7 @@ func TestList_FilterIssue(t *testing.T) {
 	ta := newTestApp(t)
 	seedEntries(t, ta)
 
-	var got []EntrySlim
-	ta.run(t, &got, "list", "--issue", "ait-Foo")
+	got := runList[EntrySlim](t, ta, "list", "--issue", "ait-Foo")
 	if len(got) != 2 {
 		t.Fatalf("len = %d, want 2", len(got))
 	}
@@ -101,8 +97,7 @@ func TestList_SinceFiltersEarly(t *testing.T) {
 	seedEntries(t, ta)
 
 	// 'now' lives inside the seed window; pick a future date
-	var got []EntrySlim
-	ta.run(t, &got, "list", "--since", "2099-01-01")
+	got := runList[EntrySlim](t, ta, "list", "--since", "2099-01-01")
 	if len(got) != 0 {
 		t.Errorf("expected empty result for far-future --since, got %d", len(got))
 	}
@@ -120,9 +115,11 @@ func TestList_EmptyDBReturnsEmptyArray(t *testing.T) {
 	ta := newTestApp(t)
 	initDemo(t, ta, "demo")
 
-	var got []EntrySlim
-	ta.run(t, &got, "list")
+	got := runList[EntrySlim](t, ta, "list")
 	if len(got) != 0 {
 		t.Errorf("expected empty list, got %d entries", len(got))
+	}
+	if !strings.Contains(ta.stdoutString(), `"entries": []`) {
+		t.Errorf("expected envelope with empty array, got:\n%s", ta.stdoutString())
 	}
 }

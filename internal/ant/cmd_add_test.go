@@ -17,7 +17,7 @@ func TestAdd_BasicBodyFlag(t *testing.T) {
 	initDemo(t, ta, "demo")
 
 	var got Entry
-	ta.run(t, &got, "add", "--body", "Hello world")
+	ta.run(t, &got, "add", "--long", "--body", "Hello world")
 
 	if !strings.HasPrefix(got.PublicID, "demo-") {
 		t.Errorf("public_id = %q, want demo- prefix", got.PublicID)
@@ -30,6 +30,24 @@ func TestAdd_BasicBodyFlag(t *testing.T) {
 	}
 	if got.CreatedAt == "" || got.UpdatedAt == "" {
 		t.Error("expected timestamps to be set")
+	}
+}
+
+func TestAdd_DefaultIsSlim(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+
+	var got map[string]any
+	ta.run(t, &got, "add", "--body", "ought to be slim")
+
+	if _, hasBody := got["body"]; hasBody {
+		t.Errorf("default add response includes body — should be slim:\n%s", ta.stdoutString())
+	}
+	if _, hasUpdated := got["updated_at"]; hasUpdated {
+		t.Errorf("default add response includes updated_at — should be slim:\n%s", ta.stdoutString())
+	}
+	if got["id"] == "" {
+		t.Error("slim response missing id")
 	}
 }
 
@@ -62,7 +80,7 @@ func TestAdd_FromStdin(t *testing.T) {
 	ta.Stdin = strings.NewReader("body from stdin\n")
 
 	var got Entry
-	ta.run(t, &got, "add")
+	ta.run(t, &got, "add", "--long")
 	if got.Body != "body from stdin" {
 		t.Errorf("body = %q, want 'body from stdin'", got.Body)
 	}
@@ -79,7 +97,7 @@ func TestAdd_FromFile(t *testing.T) {
 	initDemo(t, ta, "demo")
 
 	var got Entry
-	ta.run(t, &got, "add", "--body", "@"+path)
+	ta.run(t, &got, "add", "--long", "--body", "@"+path)
 	if !strings.Contains(got.Body, "file content") {
 		t.Errorf("body = %q, want it to contain 'file content'", got.Body)
 	}

@@ -156,6 +156,29 @@ refusal to the user instead.
 Default output is JSON. Pipe to `jq` for ad-hoc shaping, or use
 `ant list --human` when a table is more useful for a person reading along.
 
+### Response shapes
+
+- **Single records** (`add`, `edit`, `delete`, `show`, `foundation`,
+  `init`, `config`) return one JSON object on stdout.
+- **List commands** (`list`, `recent`, `search`, `for`, `export --json`)
+  return `{"entries": [...]}` — always wrapped, never a bare array. The
+  envelope leaves room for sibling fields (counts, cursors) without
+  breaking consumers, so check `.entries` rather than treating the top
+  level as the array itself.
+- **Mutations are slim by default.** `add`, `edit`, and `delete` echo
+  back `{id, kind, title?, issue_id?, created_at}` — no body, no
+  `updated_at`. Pass `--long` to get the full record back when you
+  actually need it (e.g. confirming a body change took effect).
+- **Errors** go to stderr as `{"error": {"code": "...", "message":
+  "..."}}` and the process exits non-zero. Stable codes:
+  `not_found`, `validation_error`, `conflict`, `confirmation_required`,
+  `uninitialised`, `internal_error`. Branch on the code, not the
+  message text.
+
+```bash
+ant show fake-NOPE 2>&1 >/dev/null | jq -r .error.code   # → not_found
+```
+
 ## Database location and `--db`
 
 ```bash

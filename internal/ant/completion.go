@@ -77,7 +77,7 @@ func (a *App) Completion(args []string) error {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return fmt.Errorf("usage: ant completion {bash|zsh}")
+		return NewError(CodeValidationError, "usage: ant completion {bash|zsh}")
 	}
 	switch fs.Arg(0) {
 	case "bash":
@@ -87,6 +87,6 @@ func (a *App) Completion(args []string) error {
 		_, err := io.WriteString(a.Stdout, zshCompletion)
 		return err
 	default:
-		return fmt.Errorf("unsupported shell %q (try bash or zsh)", fs.Arg(0))
+		return NewError(CodeValidationError, "unsupported shell %q (try bash or zsh)", fs.Arg(0))
 	}
 }

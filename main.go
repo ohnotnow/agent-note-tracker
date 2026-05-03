@@ -48,13 +48,18 @@ func main() {
 	if errors.Is(err, flag.ErrHelp) {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "ant: %v\n", err)
+	// Anything that surfaced from app.Dispatch has already been written to
+	// stderr as a JSON envelope; main just sets the failing exit code.
 	os.Exit(1)
 }
 
 func run(args []string) error {
 	dbPath, args, err := extractDBFlag(args)
 	if err != nil {
+		// extractDBFlag runs before Dispatch, so its errors haven't been
+		// JSON-wrapped yet. Construct an App just to use WriteError —
+		// keeps the on-stderr contract uniform across all error paths.
+		ant.New("", nil, os.Stdout, os.Stderr).WriteError(err)
 		return err
 	}
 
@@ -95,7 +100,7 @@ func extractDBFlag(args []string) (string, []string, error) {
 		switch {
 		case a == "--db":
 			if i+1 >= len(args) {
-				return "", nil, fmt.Errorf("--db requires a value")
+				return "", nil, ant.NewError(ant.CodeValidationError, "--db requires a value")
 			}
 			dbPath = args[i+1]
 			args = append(args[:i], args[i+2:]...)

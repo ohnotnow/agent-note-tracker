@@ -10,7 +10,7 @@ func TestShow_RoundTripsAddedEntry(t *testing.T) {
 	initDemo(t, ta, "demo")
 
 	var added Entry
-	ta.run(t, &added, "add",
+	ta.run(t, &added, "add", "--long",
 		"--body", "load-bearing decision",
 		"--title", "Choose sqlite",
 		"--kind", "adr",

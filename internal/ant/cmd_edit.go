@@ -25,7 +25,7 @@ import (
 func (a *App) Edit(args []string) error {
 	id, flagArgs, err := extractPositional(args, editStringFlags)
 	if err != nil {
-		return fmt.Errorf("%w: usage: ant edit <id> [flags]", err)
+		return NewError(CodeValidationError, "%v: usage: ant edit <id> [flags]", err)
 	}
 
 	fs := flag.NewFlagSet("edit", flag.ContinueOnError)
@@ -36,12 +36,14 @@ func (a *App) Edit(args []string) error {
 		kind    string
 		issue   string
 		visual  bool
+		long    bool
 	)
 	fs.StringVar(&bodyArg, "body", "", "new body, or @<path> to read from a file")
 	fs.StringVar(&title, "title", "", "new title (empty clears)")
 	fs.StringVar(&kind, "kind", "", "new kind")
 	fs.StringVar(&issue, "issue", "", "new issue id (empty clears)")
 	fs.BoolVar(&visual, "visual", false, "open $EDITOR with the current body")
+	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
 	fs.Usage = func() {
 		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [flags]")
 		fs.PrintDefaults()
@@ -50,15 +52,15 @@ func (a *App) Edit(args []string) error {
 		return err
 	}
 	if id == "" {
-		return fmt.Errorf("usage: ant edit <id> [flags]")
+		return NewError(CodeValidationError, "usage: ant edit <id> [flags]")
 	}
 	if fs.NArg() != 0 {
-		return fmt.Errorf("usage: ant edit <id> [flags]")
+		return NewError(CodeValidationError, "usage: ant edit <id> [flags]")
 	}
 
 	set := setFlags(fs)
 	if visual && set["body"] {
-		return fmt.Errorf("--visual and --body are mutually exclusive")
+		return NewError(CodeValidationError, "--visual and --body are mutually exclusive")
 	}
 
 	store, _, err := a.requireInitialised()
@@ -73,7 +75,7 @@ func (a *App) Edit(args []string) error {
 		current, err := store.GetEntry(id)
 		if err != nil {
 			if errors.Is(err, ErrNotFound) {
-				return fmt.Errorf("no entry with id %q", id)
+				return NewError(CodeNotFound, "no entry with id %q", id)
 			}
 			return err
 		}
@@ -82,7 +84,7 @@ func (a *App) Edit(args []string) error {
 			return err
 		}
 		if edited == "" {
-			return fmt.Errorf("editor produced an empty body; refusing to save")
+			return NewError(CodeValidationError, "editor produced an empty body; refusing to save")
 		}
 		if edited != current.Body {
 			update.Body = &edited
@@ -109,11 +111,14 @@ func (a *App) Edit(args []string) error {
 	entry, err := store.UpdateEntry(id, update)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return fmt.Errorf("no entry with id %q", id)
+			return NewError(CodeNotFound, "no entry with id %q", id)
 		}
 		return err
 	}
-	return a.writeJSON(entry)
+	if long {
+		return a.writeJSON(entry)
+	}
+	return a.writeJSON(entry.Slim())
 }
 
 // resolveEditBody picks the new body for an edit, returning whether body

@@ -52,6 +52,22 @@ func (ta *testApp) run(t *testing.T, v any, cmd string, args ...string) {
 	}
 }
 
+// listResp is the {"entries": [...]} envelope tests decode into. Generic
+// over the entry shape (EntrySlim, Entry, EntryWithSnippet) so each test can
+// pick the shape it cares about.
+type listResp[T any] struct {
+	Entries []T `json:"entries"`
+}
+
+// runList dispatches a command that returns the entries envelope and returns
+// just the slice.
+func runList[T any](t *testing.T, ta *testApp, cmd string, args ...string) []T {
+	t.Helper()
+	var resp listResp[T]
+	ta.run(t, &resp, cmd, args...)
+	return resp.Entries
+}
+
 // --- harness smoke test ---------------------------------------------------
 
 func TestHarness_UnknownCommand(t *testing.T) {

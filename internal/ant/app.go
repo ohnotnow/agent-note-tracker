@@ -3,7 +3,7 @@ package ant
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"flag"
 	"io"
 	"io/fs"
 	"os"
@@ -87,8 +87,20 @@ func (a *App) Store() (*Store, error) {
 	return s, nil
 }
 
-// Dispatch routes a parsed command name to its handler.
+// Dispatch routes a parsed command name to its handler. On failure, the
+// error is also serialised to stderr as a {"error": {"code", "message"}}
+// envelope so agents can branch on a stable code instead of string-matching
+// on stderr text. flag.ErrHelp is suppressed because the FlagSet has already
+// printed its usage block — that's a successful help dump, not a failure.
 func (a *App) Dispatch(cmd string, args []string) error {
+	err := a.dispatch(cmd, args)
+	if err != nil && !errors.Is(err, flag.ErrHelp) {
+		a.WriteError(err)
+	}
+	return err
+}
+
+func (a *App) dispatch(cmd string, args []string) error {
 	switch cmd {
 	case "init":
 		return a.Init(args)
@@ -119,7 +131,7 @@ func (a *App) Dispatch(cmd string, args []string) error {
 	case "completion":
 		return a.Completion(args)
 	default:
-		return fmt.Errorf("unknown command %q", cmd)
+		return NewError(CodeValidationError, "unknown command %q", cmd)
 	}
 }
 
@@ -128,6 +140,17 @@ func (a *App) writeJSON(v any) error {
 	enc := json.NewEncoder(a.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
+}
+
+// writeEntries wraps a slice in {"entries": [...]} and emits as JSON. The
+// envelope leaves room to add sibling fields (total counts, cursors) later
+// without breaking consumers — exactly the trap a bare array form falls
+// into. Caller is responsible for ensuring entries is a non-nil slice so
+// the JSON is `[]` rather than `null`.
+func (a *App) writeEntries(entries any) error {
+	return a.writeJSON(struct {
+		Entries any `json:"entries"`
+	}{Entries: entries})
 }
 
 // requireInitialised opens the database and confirms 'ant init' has been
@@ -141,7 +164,7 @@ func (a *App) requireInitialised() (*Store, string, error) {
 	}
 	if dbPath != MemoryDB {
 		if _, statErr := os.Stat(dbPath); errors.Is(statErr, fs.ErrNotExist) {
-			return nil, dbPath, fmt.Errorf("no ant database at %s — run 'ant init' first", dbPath)
+			return nil, dbPath, NewError(CodeUninitialised, "no ant database at %s — run 'ant init' first", dbPath)
 		} else if statErr != nil {
 			return nil, dbPath, statErr
 		}
@@ -155,7 +178,7 @@ func (a *App) requireInitialised() (*Store, string, error) {
 		return nil, dbPath, err
 	}
 	if !ok {
-		return nil, dbPath, fmt.Errorf("ant database at %s has no prefix — run 'ant init' first", dbPath)
+		return nil, dbPath, NewError(CodeUninitialised, "ant database at %s has no prefix — run 'ant init' first", dbPath)
 	}
 	return s, dbPath, nil
 }

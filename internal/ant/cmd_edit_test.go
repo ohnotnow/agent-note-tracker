@@ -22,7 +22,7 @@ func TestEdit_BodyViaFlag(t *testing.T) {
 	id := addAndID(t, ta)
 
 	var got Entry
-	ta.run(t, &got, "edit", id, "--body", "new body text")
+	ta.run(t, &got, "edit", id, "--long", "--body", "new body text")
 	if got.Body != "new body text" {
 		t.Errorf("body = %q, want 'new body text'", got.Body)
 	}
@@ -35,7 +35,7 @@ func TestEdit_BodyViaStdin(t *testing.T) {
 	ta.Stdin = strings.NewReader("piped new body\n")
 
 	var got Entry
-	ta.run(t, &got, "edit", id)
+	ta.run(t, &got, "edit", id, "--long")
 	if got.Body != "piped new body" {
 		t.Errorf("body = %q, want 'piped new body'", got.Body)
 	}
@@ -48,7 +48,7 @@ func TestEdit_BodyFlagBeatsStdin(t *testing.T) {
 	ta.Stdin = strings.NewReader("from stdin")
 
 	var got Entry
-	ta.run(t, &got, "edit", id, "--body", "from flag")
+	ta.run(t, &got, "edit", id, "--long", "--body", "from flag")
 	if got.Body != "from flag" {
 		t.Errorf("body = %q, want 'from flag'", got.Body)
 	}
@@ -169,7 +169,7 @@ func TestEdit_VisualEditor_UpdatesBody(t *testing.T) {
 	id := addAndID(t, ta, "--body", "original body")
 
 	var got Entry
-	ta.run(t, &got, "edit", id, "--visual")
+	ta.run(t, &got, "edit", id, "--long", "--visual")
 	if got.Body != "edited via fake editor" {
 		t.Errorf("body = %q, want 'edited via fake editor'", got.Body)
 	}
@@ -204,7 +204,7 @@ func TestEdit_VisualEditor_NoChangeIsNoop(t *testing.T) {
 	ta.run(t, &before, "show", id)
 
 	var got Entry
-	ta.run(t, &got, "edit", id, "--visual")
+	ta.run(t, &got, "edit", id, "--long", "--visual")
 	if got.UpdatedAt != before.UpdatedAt {
 		t.Errorf("updated_at changed despite no body change: before=%q after=%q",
 			before.UpdatedAt, got.UpdatedAt)

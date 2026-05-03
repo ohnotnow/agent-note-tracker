@@ -24,7 +24,7 @@ func (a *App) Search(args []string) error {
 	}
 	terms := strings.Fields(strings.Join(fs.Args(), " "))
 	if len(terms) == 0 {
-		return fmt.Errorf("usage: ant search <query>")
+		return NewError(CodeValidationError, "usage: ant search <query>")
 	}
 
 	store, _, err := a.requireInitialised()
@@ -40,5 +40,5 @@ func (a *App) Search(args []string) error {
 	for i, e := range entries {
 		out[i] = e.WithSnippet(SnippetLen)
 	}
-	return a.writeJSON(out)
+	return a.writeEntries(out)
 }

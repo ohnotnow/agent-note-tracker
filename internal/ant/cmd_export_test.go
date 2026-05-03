@@ -82,8 +82,7 @@ func TestExport_JSON(t *testing.T) {
 	addAndID(t, ta, "--title", "First")
 	addAndID(t, ta, "--title", "Second")
 
-	var got []Entry
-	ta.run(t, &got, "export", "--json")
+	got := runList[Entry](t, ta, "export", "--json")
 	if len(got) != 2 {
 		t.Errorf("len = %d, want 2", len(got))
 	}

@@ -19,24 +19,28 @@ import (
 func (a *App) Delete(args []string) error {
 	id, flagArgs, err := extractPositional(args, nil)
 	if err != nil {
-		return fmt.Errorf("%w: usage: ant delete <id>", err)
+		return NewError(CodeValidationError, "%v: usage: ant delete <id>", err)
 	}
 	fs := flag.NewFlagSet("delete", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
-	var force bool
+	var (
+		force bool
+		long  bool
+	)
 	fs.BoolVar(&force, "force", false, "permanently delete the entry")
+	fs.BoolVar(&long, "long", false, "echo the full record (default is slim)")
 	fs.Usage = func() {
-		fmt.Fprintln(a.Stderr, "usage: ant delete <id> [--force]")
+		fmt.Fprintln(a.Stderr, "usage: ant delete <id> [--force] [--long]")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(flagArgs); err != nil {
 		return err
 	}
 	if id == "" {
-		return fmt.Errorf("usage: ant delete <id>")
+		return NewError(CodeValidationError, "usage: ant delete <id>")
 	}
 	if fs.NArg() != 0 {
-		return fmt.Errorf("usage: ant delete <id>")
+		return NewError(CodeValidationError, "usage: ant delete <id>")
 	}
 
 	store, _, err := a.requireInitialised()
@@ -46,7 +50,7 @@ func (a *App) Delete(args []string) error {
 	entry, err := store.GetEntry(id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return fmt.Errorf("no entry with id %q", id)
+			return NewError(CodeNotFound, "no entry with id %q", id)
 		}
 		return err
 	}
@@ -56,15 +60,16 @@ func (a *App) Delete(args []string) error {
 		if title == "" {
 			title = "(no title)"
 		}
-		fmt.Fprintf(a.Stderr,
-			"would delete %s — %q (%s, %s)\n"+
-				"this is irreversible; refusing to act without confirmation.\n",
+		return NewError(CodeConfirmationRequired,
+			"would delete %s — %q (%s, %s); this is irreversible. Re-run with --force to proceed.",
 			entry.PublicID, title, entry.Kind, entry.CreatedAt)
-		return fmt.Errorf("delete refused")
 	}
 
 	if err := store.DeleteEntry(id); err != nil {
 		return err
 	}
-	return a.writeJSON(entry)
+	if long {
+		return a.writeJSON(entry)
+	}
+	return a.writeJSON(entry.Slim())
 }

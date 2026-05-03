@@ -21,7 +21,7 @@ func (a *App) Recent(args []string) error {
 		return err
 	}
 	if limit <= 0 {
-		return fmt.Errorf("--limit must be > 0")
+		return NewError(CodeValidationError, "--limit must be > 0")
 	}
 
 	store, _, err := a.requireInitialised()
@@ -37,5 +37,5 @@ func (a *App) Recent(args []string) error {
 	for i, e := range entries {
 		out[i] = e.WithSnippet(SnippetLen)
 	}
-	return a.writeJSON(out)
+	return a.writeEntries(out)
 }

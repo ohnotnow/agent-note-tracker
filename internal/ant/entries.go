@@ -46,7 +46,7 @@ func (s *Store) InsertEntry(prefix string, e NewEntry) (Entry, error) {
 		err := tx.QueryRow(`SELECT public_id FROM entries WHERE kind = ? LIMIT 1`, KindFoundation).Scan(&existing)
 		switch {
 		case err == nil:
-			return Entry{}, fmt.Errorf("a foundation entry already exists (%s); use 'ant edit %s' to revise it", existing, existing)
+			return Entry{}, NewError(CodeConflict, "a foundation entry already exists (%s); use 'ant edit %s' to revise it", existing, existing)
 		case errors.Is(err, sql.ErrNoRows):
 			// fine, no existing foundation
 		default:

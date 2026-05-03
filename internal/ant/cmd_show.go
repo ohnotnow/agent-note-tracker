@@ -19,7 +19,7 @@ func (a *App) Show(args []string) error {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return fmt.Errorf("usage: ant show <id>")
+		return NewError(CodeValidationError, "usage: ant show <id>")
 	}
 	id := fs.Arg(0)
 
@@ -31,7 +31,7 @@ func (a *App) Show(args []string) error {
 	entry, err := store.GetEntry(id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
-			return fmt.Errorf("no entry with id %q", id)
+			return NewError(CodeNotFound, "no entry with id %q", id)
 		}
 		return err
 	}

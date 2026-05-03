@@ -113,7 +113,7 @@ func chooseInitPrefix(explicit, existing string, hadExisting bool) (string, bool
 	case explicit != "":
 		s := SanitisePrefix(explicit)
 		if s == "" {
-			return "", false, fmt.Errorf("prefix %q has no usable characters", explicit)
+			return "", false, NewError(CodeValidationError, "prefix %q has no usable characters", explicit)
 		}
 		return s, hadExisting && s != existing, nil
 	case hadExisting:

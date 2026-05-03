@@ -39,7 +39,7 @@ func (a *App) List(args []string) error {
 		return err
 	}
 	if long && human {
-		return fmt.Errorf("--long and --human are mutually exclusive")
+		return NewError(CodeValidationError, "--long and --human are mutually exclusive")
 	}
 
 	since, err := parseSince(sinceIn)
@@ -65,17 +65,16 @@ func (a *App) List(args []string) error {
 	case human:
 		return a.writeHumanTable(entries)
 	case long:
-		// Always emit a JSON array, even when empty.
 		if entries == nil {
 			entries = []Entry{}
 		}
-		return a.writeJSON(entries)
+		return a.writeEntries(entries)
 	default:
 		slim := make([]EntrySlim, len(entries))
 		for i, e := range entries {
 			slim[i] = e.Slim()
 		}
-		return a.writeJSON(slim)
+		return a.writeEntries(slim)
 	}
 }
 
@@ -118,5 +117,5 @@ func parseSince(s string) (string, error) {
 	if t, err := time.Parse("2006-01-02", s); err == nil {
 		return t.UTC().Format(time.RFC3339), nil
 	}
-	return "", fmt.Errorf("could not parse --since %q (try YYYY-MM-DD or RFC3339)", s)
+	return "", NewError(CodeValidationError, "could not parse --since %q (try YYYY-MM-DD or RFC3339)", s)
 }

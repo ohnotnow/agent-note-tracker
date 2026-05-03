@@ -17,8 +17,7 @@ func TestSearch_SingleTerm(t *testing.T) {
 	ta := newTestApp(t)
 	seedSearchable(t, ta)
 
-	var got []EntryWithSnippet
-	ta.run(t, &got, "search", "sqlite")
+	got := runList[EntryWithSnippet](t, ta, "search", "sqlite")
 	if len(got) != 1 {
 		t.Fatalf("len = %d, want 1", len(got))
 	}
@@ -31,8 +30,7 @@ func TestSearch_CaseInsensitive(t *testing.T) {
 	ta := newTestApp(t)
 	seedSearchable(t, ta)
 
-	var got []EntryWithSnippet
-	ta.run(t, &got, "search", "SQLITE")
+	got := runList[EntryWithSnippet](t, ta, "search", "SQLITE")
 	if len(got) != 1 {
 		t.Errorf("expected 1 result for case-insensitive 'SQLITE', got %d", len(got))
 	}
@@ -42,9 +40,8 @@ func TestSearch_MatchesTitle(t *testing.T) {
 	ta := newTestApp(t)
 	seedSearchable(t, ta)
 
-	var got []EntryWithSnippet
 	// "Choose" only appears in a title.
-	ta.run(t, &got, "search", "choose")
+	got := runList[EntryWithSnippet](t, ta, "search", "choose")
 	if len(got) != 1 {
 		t.Fatalf("len = %d, want 1", len(got))
 	}
@@ -54,14 +51,12 @@ func TestSearch_MultiTerm_AND(t *testing.T) {
 	ta := newTestApp(t)
 	seedSearchable(t, ta)
 
-	var got []EntryWithSnippet
-	ta.run(t, &got, "search", "auth", "cookies")
+	got := runList[EntryWithSnippet](t, ta, "search", "auth", "cookies")
 	if len(got) != 1 {
 		t.Fatalf("len = %d, want 1 (only the entry with both terms)", len(got))
 	}
 
-	ta.reset()
-	ta.run(t, &got, "search", "auth", "sqlite") // no entry has both
+	got = runList[EntryWithSnippet](t, ta, "search", "auth", "sqlite") // no entry has both
 	if len(got) != 0 {
 		t.Fatalf("len = %d, want 0", len(got))
 	}
@@ -71,9 +66,8 @@ func TestSearch_QuotedPhraseSplitsOnWhitespace(t *testing.T) {
 	ta := newTestApp(t)
 	seedSearchable(t, ta)
 
-	var got []EntryWithSnippet
 	// Single arg with whitespace splits to two terms internally
-	ta.run(t, &got, "search", "auth flow")
+	got := runList[EntryWithSnippet](t, ta, "search", "auth flow")
 	if len(got) != 1 {
 		t.Errorf("len = %d, want 1", len(got))
 	}

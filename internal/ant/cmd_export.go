@@ -51,7 +51,7 @@ func (a *App) Export(args []string) error {
 		return err
 	}
 	if id != "" && (kind != "" || issue != "" || sinceIn != "") {
-		return fmt.Errorf("can't combine <id> argument with --kind/--issue/--since")
+		return NewError(CodeValidationError, "can't combine <id> argument with --kind/--issue/--since")
 	}
 
 	since, err := parseSince(sinceIn)
@@ -69,7 +69,7 @@ func (a *App) Export(args []string) error {
 		e, err := store.GetEntry(id)
 		if err != nil {
 			if errors.Is(err, ErrNotFound) {
-				return fmt.Errorf("no entry with id %q", id)
+				return NewError(CodeNotFound, "no entry with id %q", id)
 			}
 			return err
 		}
@@ -89,7 +89,7 @@ func (a *App) Export(args []string) error {
 		if entries == nil {
 			entries = []Entry{}
 		}
-		return a.writeJSON(entries)
+		return a.writeEntries(entries)
 	}
 
 	_, err = io.WriteString(a.Stdout, RenderMarkdown(entries))

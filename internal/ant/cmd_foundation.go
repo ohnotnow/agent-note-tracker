@@ -29,7 +29,7 @@ func (a *App) Foundation(args []string) error {
 		return err
 	}
 	if fs.NArg() != 0 {
-		return fmt.Errorf("usage: ant foundation")
+		return NewError(CodeValidationError, "usage: ant foundation")
 	}
 
 	store, _, err := a.requireInitialised()
@@ -42,7 +42,7 @@ func (a *App) Foundation(args []string) error {
 		return err
 	}
 	if len(entries) == 0 {
-		return fmt.Errorf("no foundation recorded — capture one with: ant add --kind foundation --body @file.md")
+		return NewError(CodeNotFound, "no foundation recorded — capture one with: ant add --kind foundation --body @file.md")
 	}
 	if len(entries) > 1 {
 		fmt.Fprintf(a.Stderr,
