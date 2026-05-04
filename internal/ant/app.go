@@ -92,9 +92,12 @@ func (a *App) Store() (*Store, error) {
 // envelope so agents can branch on a stable code instead of string-matching
 // on stderr text. flag.ErrHelp is suppressed because the FlagSet has already
 // printed its usage block — that's a successful help dump, not a failure.
+// silentExit-style errors (used by 'self-update --check' to signal "newer
+// version available") also skip the envelope — they're a non-zero exit
+// signal, not an error condition.
 func (a *App) Dispatch(cmd string, args []string) error {
 	err := a.dispatch(cmd, args)
-	if err != nil && !errors.Is(err, flag.ErrHelp) {
+	if err != nil && !errors.Is(err, flag.ErrHelp) && !silentExit(err) {
 		a.WriteError(err)
 	}
 	return err
@@ -128,6 +131,8 @@ func (a *App) dispatch(cmd string, args []string) error {
 		return a.Export(args)
 	case "version":
 		return a.Version(args)
+	case "self-update":
+		return a.SelfUpdate(args)
 	case "completion":
 		return a.Completion(args)
 	default:

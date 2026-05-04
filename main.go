@@ -48,6 +48,12 @@ func main() {
 	if errors.Is(err, flag.ErrHelp) {
 		return
 	}
+	// Commands that need a specific exit code (e.g. 'self-update --check'
+	// returning 1 when an update is available) wrap their result with
+	// ant.ExitWithCode.
+	if code, ok := ant.ExitCode(err); ok {
+		os.Exit(code)
+	}
 	// Anything that surfaced from app.Dispatch has already been written to
 	// stderr as a JSON envelope; main just sets the failing exit code.
 	os.Exit(1)
@@ -75,7 +81,7 @@ func run(args []string) error {
 		return nil
 	}
 
-	app := ant.New(dbPath, stdinReader(), os.Stdout, os.Stderr)
+	app := ant.New(dbPath, stdinReader(cmd), os.Stdout, os.Stderr)
 	defer app.Close()
 	return app.Dispatch(cmd, rest)
 }
@@ -83,7 +89,14 @@ func run(args []string) error {
 // stdinReader returns os.Stdin when something is piped in, and an empty
 // reader when stdin is a terminal — keeping commands that fall back to
 // stdin (like 'ant add') from blocking on an interactive prompt.
-func stdinReader() io.Reader {
+//
+// 'self-update' is the exception: its confirmation prompt explicitly wants
+// real stdin so the user can type y/N. Wiring it through the cmd name keeps
+// every other command's terminal-stdin shielding intact.
+func stdinReader(cmd string) io.Reader {
+	if cmd == "self-update" {
+		return os.Stdin
+	}
 	if isatty.IsTerminal(os.Stdin.Fd()) {
 		return strings.NewReader("")
 	}

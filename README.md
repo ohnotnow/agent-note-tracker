@@ -157,6 +157,7 @@ use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
 | `ant foundation` | Print the project's foundation entry, if one has been recorded |
 | `ant export [<id>]` | Render entries as markdown; `--json` for JSON |
 | `ant version` | Print the build version (and check GitHub for newer releases) |
+| `ant self-update` | Update to the latest release; `--check` reports without installing, `--yes` skips the prompt |
 | `ant completion {bash,zsh}` | Print a shell completion script |
 
 ## Output
@@ -213,6 +214,31 @@ A stamped (non-`dev`) build will, on `ant version`, do a best-effort
 GitHub check against the latest tagged release and let you know if a
 newer one is available. The check has a 5-second timeout and fails
 silently — offline use is unaffected.
+
+## Self-update
+
+```sh
+ant self-update            # show release notes, prompt y/N, replace the binary
+ant self-update --check    # exit 0 if current, 1 if newer is available, 2 on lookup failure
+ant self-update --yes      # skip the prompt
+```
+
+`self-update` downloads the matching binary for your OS and architecture
+from the latest GitHub release, verifies it against the published
+`SHA256SUMS`, and atomically replaces the running executable. Release
+notes appear inside the confirmation prompt so there's nothing to
+chase down separately.
+
+A few cases short-circuit before any download:
+
+- **Dev builds** refuse — there's no version to compare against, and
+  overwriting a hand-built binary with a release one is rarely what you
+  want.
+- **Homebrew** and **`go install`** installs print a hint pointing you
+  at the right tool (`brew upgrade ant`, `go install …@latest`) instead
+  of sidestepping your package manager.
+- **Unwriteable install dirs** report immediately with a "re-run with
+  sudo, or visit /releases/latest" message rather than failing partway.
 
 ## Layout
 

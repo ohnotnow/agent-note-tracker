@@ -66,31 +66,54 @@ func (a *App) Version(args []string) error {
 	return nil
 }
 
-// checkLatestRelease asks the GitHub API for the latest published release
-// of repoURL and returns its tag_name. A 5-second timeout keeps a slow or
-// unreachable network from making 'ant version' feel hung.
-func checkLatestRelease(repoURL string) (string, error) {
-	apiURL := buildAPIURL(repoURL)
+// ghAsset is a single binary attached to a GitHub release.
+type ghAsset struct {
+	Name string `json:"name"`
+	URL  string `json:"browser_download_url"`
+}
 
-	client := &http.Client{Timeout: 5 * time.Second}
+// ghRelease is the slice of the GitHub /releases/latest payload that ant
+// cares about — the tag name for version comparison, the markdown body for
+// release notes, and the asset list so self-update can find the right binary.
+type ghRelease struct {
+	TagName string    `json:"tag_name"`
+	Body    string    `json:"body"`
+	Assets  []ghAsset `json:"assets"`
+}
+
+// fetchLatestRelease asks the GitHub API for the latest published release at
+// apiURL and returns the parsed payload. The caller supplies the http.Client
+// so it can pick an appropriate timeout — 'version' wants a short one (so a
+// slow network does not make the command feel hung), while 'self-update'
+// needs longer for a multi-megabyte binary download.
+func fetchLatestRelease(client *http.Client, apiURL string) (*ghRelease, error) {
 	resp, err := client.Get(apiURL)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
-	var release struct {
-		TagName string `json:"tag_name"`
+	var rel ghRelease
+	if err := json.NewDecoder(resp.Body).Decode(&rel); err != nil {
+		return nil, err
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+	return &rel, nil
+}
+
+// checkLatestRelease asks the GitHub API for the latest published release
+// of repoURL and returns its tag_name. A 5-second timeout keeps a slow or
+// unreachable network from making 'ant version' feel hung.
+func checkLatestRelease(repoURL string) (string, error) {
+	client := &http.Client{Timeout: 5 * time.Second}
+	rel, err := fetchLatestRelease(client, buildAPIURL(repoURL))
+	if err != nil {
 		return "", err
 	}
-
-	return release.TagName, nil
+	return rel.TagName, nil
 }
 
 // buildAPIURL converts a github.com repo URL into the corresponding
