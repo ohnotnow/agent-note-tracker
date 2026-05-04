@@ -11,14 +11,46 @@ _ant_complete() {
     local cur prev
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    local commands="init config add show edit delete list recent search for foundation export version completion"
+    local kinds="note adr pivot foundation"
+    # Commands whose first positional argument is an entry id.
+    local id_commands="show edit delete export"
+
     if [ "${COMP_CWORD}" -eq 1 ]; then
-        COMPREPLY=( $(compgen -W "init config add show edit delete list recent search for foundation export version completion" -- "${cur}") )
+        COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
         return
     fi
+
+    local cmd="${COMP_WORDS[1]}"
+
+    # Flag value completions (apply regardless of subcommand).
     case "${prev}" in
-        --kind)  COMPREPLY=( $(compgen -W "note adr pivot foundation" -- "${cur}") ) ;;
-        completion) COMPREPLY=( $(compgen -W "bash zsh" -- "${cur}") ) ;;
+        --kind)
+            COMPREPLY=( $(compgen -W "${kinds}" -- "${cur}") )
+            return
+            ;;
     esac
+
+    # 'completion' takes a shell name as its only argument.
+    if [ "${cmd}" = "completion" ] && [ "${COMP_CWORD}" -eq 2 ]; then
+        COMPREPLY=( $(compgen -W "bash zsh" -- "${cur}") )
+        return
+    fi
+
+    # Entry id completion for commands that accept an id as a positional.
+    # Only kicks in when the user is typing a non-flag token, so it doesn't
+    # interfere with --flag value completions.
+    if [[ "${cur}" != -* ]]; then
+        for c in ${id_commands}; do
+            if [ "${cmd}" = "${c}" ]; then
+                local ids
+                ids=$(ant list 2>/dev/null | grep -o '"id": *"[^"]*"' | sed 's/"id": *"//;s/"//')
+                COMPREPLY=( $(compgen -W "${ids}" -- "${cur}") )
+                return
+            fi
+        done
+    fi
 }
 complete -F _ant_complete ant
 `
@@ -44,6 +76,14 @@ _ant() {
     )
     kinds=(note adr pivot foundation)
 
+    # Pull entry ids out of 'ant list' JSON. Slim output is one "id" per
+    # entry, so a quick grep/sed beats parsing JSON properly.
+    _ant_entry_ids() {
+        local -a ids
+        ids=(${(f)"$(ant list 2>/dev/null | grep -o '"id": *"[^"]*"' | sed 's/"id": *"//;s/"//')"})
+        compadd -a ids
+    }
+
     _arguments -C \
         '1: :->cmds' \
         '*::arg:->args'
@@ -53,11 +93,40 @@ _ant() {
         args)
             case ${words[1]} in
                 completion) _values 'shell' bash zsh ;;
-                add|edit) _arguments \
-                    '--body[entry body or @file]:body:' \
-                    '--title[entry title]:title:' \
-                    '--kind[entry kind]:kind:(note adr pivot foundation)' \
-                    '--issue[linked issue id]:issue:' ;;
+                show|delete)
+                    _ant_entry_ids
+                    ;;
+                edit)
+                    if (( CURRENT == 2 )); then
+                        _ant_entry_ids
+                    else
+                        _arguments \
+                            '--body[entry body or @file]:body:' \
+                            '--title[entry title]:title:' \
+                            '--kind[entry kind]:kind:(note adr pivot foundation)' \
+                            '--issue[linked issue id]:issue:' \
+                            '--visual[open $EDITOR with the current body]' \
+                            '--long[return the full record]'
+                    fi
+                    ;;
+                export)
+                    if [[ "${words[CURRENT]}" == -* ]]; then
+                        _arguments \
+                            '--kind[filter by kind]:kind:(note adr pivot foundation)' \
+                            '--issue[filter by issue id]:issue:' \
+                            '--since[created_at >= date]:since:' \
+                            '--json[emit JSON instead of markdown]'
+                    else
+                        _ant_entry_ids
+                    fi
+                    ;;
+                add)
+                    _arguments \
+                        '--body[entry body or @file]:body:' \
+                        '--title[entry title]:title:' \
+                        '--kind[entry kind]:kind:(note adr pivot foundation)' \
+                        '--issue[linked issue id]:issue:'
+                    ;;
             esac
             ;;
     esac
