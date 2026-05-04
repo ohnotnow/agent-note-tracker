@@ -35,6 +35,10 @@ jobs:
           # Windows
           GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/ant-windows-amd64.exe .
 
+      - name: Generate checksums
+        working-directory: dist
+        run: sha256sum * > SHA256SUMS
+
       - name: Create release
         uses: softprops/action-gh-release@v2
         with:
