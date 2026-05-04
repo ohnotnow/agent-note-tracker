@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-05-04
+### Added
+- `ant self-update` command. Downloads the matching binary for your OS/arch from the latest GitHub release, verifies it against the published `SHA256SUMS`, and atomically replaces the running executable. Release notes appear inside the confirmation prompt.
+- `--check` flag on `self-update` reports availability without installing (exit 0 = current, 1 = newer available, 2 = lookup failed).
+- `--yes` flag on `self-update` skips the confirmation prompt for non-interactive use.
+- Short-circuits for installs that shouldn't self-update: dev builds refuse, Homebrew and `go install` installs point you at the right tool, and unwriteable install dirs report up front rather than failing partway.
+
+### Changed
+- Internal: introduced `ExitWithCode` so commands can request a specific shell exit status, and a "silent exit" path that skips the JSON error envelope when a non-zero exit isn't actually an error condition (used by `self-update --check`).
+
+## [1.2.1] - 2026-05-04
+### Changed
+- Release workflow now publishes a `SHA256SUMS` file alongside the cross-platform binaries, so downloaders (and `self-update` from v1.3.0) can verify their build.
+
 ## [1.2.0] - 2026-05-04
 ### Added
 - Shell completion now suggests entry ids for `show`, `edit`, `delete`, and `export` (bash and zsh). Type `ant show ant-<tab>` and the shell will offer matching ids sourced from `ant list`.
@@ -30,6 +44,8 @@ First stable release. No code changes from `v0.3.0` — this tag marks the publi
 
 ## [0.1.0] - 2026-05-01
 
+[1.3.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.2.1...v1.3.0
+[1.2.1]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v0.3.0...v1.0.0
