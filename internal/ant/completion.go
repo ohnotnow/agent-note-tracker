@@ -12,10 +12,10 @@ _ant_complete() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    local commands="init config add show edit delete list recent search for foundation export version completion"
+    local commands="init config add show edit append delete list recent search for foundation export version completion"
     local kinds="note adr pivot foundation"
     # Commands whose first positional argument is an entry id.
-    local id_commands="show edit delete export"
+    local id_commands="show edit append delete export"
 
     if [ "${COMP_CWORD}" -eq 1 ]; then
         COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
@@ -64,6 +64,7 @@ _ant() {
         'add:capture a new entry'
         'show:show full entry detail'
         'edit:update an existing entry'
+        'append:append to an existing entry, divided by a markdown rule'
         'delete:remove an entry'
         'list:list entries'
         'recent:show the most recent entries'
@@ -101,11 +102,20 @@ _ant() {
                         _ant_entry_ids
                     else
                         _arguments \
-                            '--body[entry body or @file]:body:' \
+                            '--body[new body, @file, or - for stdin]:body:' \
                             '--title[entry title]:title:' \
                             '--kind[entry kind]:kind:(note adr pivot foundation)' \
                             '--issue[linked issue id]:issue:' \
                             '--visual[open $EDITOR with the current body]' \
+                            '--long[return the full record]'
+                    fi
+                    ;;
+                append)
+                    if (( CURRENT == 2 )); then
+                        _ant_entry_ids
+                    else
+                        _arguments \
+                            '--body[appended content, @file, or - for stdin]:body:' \
                             '--long[return the full record]'
                     fi
                     ;;
@@ -122,7 +132,7 @@ _ant() {
                     ;;
                 add)
                     _arguments \
-                        '--body[entry body or @file]:body:' \
+                        '--body[entry body, @file, or - for stdin]:body:' \
                         '--title[entry title]:title:' \
                         '--kind[entry kind]:kind:(note adr pivot foundation)' \
                         '--issue[linked issue id]:issue:'

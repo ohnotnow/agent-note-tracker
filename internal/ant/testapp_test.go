@@ -80,3 +80,43 @@ func TestHarness_UnknownCommand(t *testing.T) {
 		t.Errorf("error = %v, want 'unknown command' substring", err)
 	}
 }
+
+// When users reach for an ait-shaped verb like `ant note add ...`, dispatch
+// should still report it as unknown but nudge toward `ant add --kind note`.
+func TestHarness_UnknownKindVerbSuggests(t *testing.T) {
+	cases := []struct {
+		cmd  string
+		kind string
+	}{
+		{"note", "note"},
+		{"notes", "note"},
+		{"adr", "adr"},
+		{"adrs", "adr"},
+		{"pivot", "pivot"},
+		{"pivots", "pivot"},
+	}
+	for _, c := range cases {
+		t.Run(c.cmd, func(t *testing.T) {
+			ta := newTestApp(t)
+			err := ta.Dispatch(c.cmd, []string{"add", "some text"})
+			if err == nil {
+				t.Fatalf("expected error for unknown command %q", c.cmd)
+			}
+			msg := err.Error()
+			if !strings.Contains(msg, "--kind "+c.kind) {
+				t.Errorf("error = %v, want suggestion containing '--kind %s'", err, c.kind)
+			}
+		})
+	}
+}
+
+func TestHarness_UnknownNonKindCommand_NoSuggestion(t *testing.T) {
+	ta := newTestApp(t)
+	err := ta.Dispatch("frobnicate", nil)
+	if err == nil {
+		t.Fatal("expected error for unknown command")
+	}
+	if strings.Contains(err.Error(), "--kind") {
+		t.Errorf("error = %v, should not suggest a kind for arbitrary unknown verbs", err)
+	}
+}

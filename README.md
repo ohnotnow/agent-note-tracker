@@ -71,7 +71,8 @@ ant for ait-AbCdE.2                  # entries linked to a specific issue
 ant show ant-AkRXV                   # full detail for one entry
 ant list --kind adr --human          # filtered table view
 
-ant edit ant-AkRXV --title "New"     # update fields
+ant edit ant-AkRXV --title "New"     # replace fields wholesale
+ant append ant-AkRXV --body "later"  # grow an entry with a dated update
 ant export ant-AkRXV                 # render one entry as markdown
 ant export --kind adr                # render every ADR as markdown
 ant export --json                    # JSON instead of markdown
@@ -149,6 +150,7 @@ use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
 | `ant add` | Capture a new entry (body via `--body`, `--body @file`, or stdin) |
 | `ant show <id>` | Full record for one entry |
 | `ant edit <id>` | Update body / title / kind / issue (empty `--title`/`--issue` clears) |
+| `ant append <id>` | Add content to an existing entry, separated by a markdown `---` rule |
 | `ant delete <id>` | Remove an entry (refuses without `--force`, see below) |
 | `ant list` | List entries; `--long`, `--human`, filters: `--kind`, `--issue`, `--since` |
 | `ant recent [--limit N]` | N most recent entries with body snippets |

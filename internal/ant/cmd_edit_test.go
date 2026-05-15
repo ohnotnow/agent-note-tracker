@@ -41,6 +41,19 @@ func TestEdit_BodyViaStdin(t *testing.T) {
 	}
 }
 
+func TestEdit_BodyExplicitStdinFlag(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	id := addAndID(t, ta)
+	ta.Stdin = strings.NewReader("via --body -\n")
+
+	var got Entry
+	ta.run(t, &got, "edit", id, "--long", "--body", "-")
+	if got.Body != "via --body -" {
+		t.Errorf("body = %q, want 'via --body -'", got.Body)
+	}
+}
+
 func TestEdit_BodyFlagBeatsStdin(t *testing.T) {
 	ta := newTestApp(t)
 	initDemo(t, ta, "demo")

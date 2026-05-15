@@ -4,7 +4,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -15,6 +14,7 @@ import (
 // Update semantics:
 //   --body <s>    set body to literal <s>
 //   --body @<p>   set body to contents of file <p>
+//   --body -      set body from stdin (explicit)
 //   (stdin)       if --body is not given and stdin has content, set body
 //   --title <s>   set title (empty string clears)
 //   --kind <s>    set kind (rejects empty)
@@ -22,6 +22,8 @@ import (
 //
 // Flags that aren't passed leave the column unchanged. With no flags at all
 // (and no piped stdin) the call is a read-only no-op that returns the entry.
+//
+// To grow an entry rather than replace it, see 'ant append'.
 func (a *App) Edit(args []string) error {
 	id, flagArgs, err := extractPositional(args, editStringFlags)
 	if err != nil {
@@ -38,14 +40,21 @@ func (a *App) Edit(args []string) error {
 		visual  bool
 		long    bool
 	)
-	fs.StringVar(&bodyArg, "body", "", "new body, or @<path> to read from a file")
+	fs.StringVar(&bodyArg, "body", "", "new body, @<path> to read from a file, or - for stdin")
 	fs.StringVar(&title, "title", "", "new title (empty clears)")
 	fs.StringVar(&kind, "kind", "", "new kind")
 	fs.StringVar(&issue, "issue", "", "new issue id (empty clears)")
 	fs.BoolVar(&visual, "visual", false, "open $EDITOR with the current body")
 	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
 	fs.Usage = func() {
-		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [flags]")
+		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [--body <text>|@<file>|-] [--title <s>] [--kind <k>] [--issue <id>] [--visual] [--long]")
+		fmt.Fprintln(a.Stderr, "")
+		fmt.Fprintln(a.Stderr, "To grow an entry rather than replace it, see 'ant append'.")
+		fmt.Fprintln(a.Stderr, "")
+		fmt.Fprintln(a.Stderr, "Heredoc example:")
+		fmt.Fprintln(a.Stderr, "  ant edit demo-AbCdE --body - <<'EOF'")
+		fmt.Fprintln(a.Stderr, "  Rewritten body. Embeds 'apostrophes' without escaping.")
+		fmt.Fprintln(a.Stderr, "  EOF")
 		fs.PrintDefaults()
 	}
 	if err := fs.Parse(flagArgs); err != nil {
@@ -128,7 +137,14 @@ func (a *App) Edit(args []string) error {
 //   3. otherwise, leave unchanged
 func (a *App) resolveEditBody(bodyArg string, bodyFlagSet bool) (string, bool, error) {
 	if bodyFlagSet {
-		if strings.HasPrefix(bodyArg, "@") {
+		switch {
+		case bodyArg == "-":
+			body, err := a.readStdinBody()
+			if err != nil {
+				return "", false, err
+			}
+			return body, true, nil
+		case strings.HasPrefix(bodyArg, "@"):
 			path := bodyArg[1:]
 			content, err := os.ReadFile(path)
 			if err != nil {
@@ -138,11 +154,10 @@ func (a *App) resolveEditBody(bodyArg string, bodyFlagSet bool) (string, bool, e
 		}
 		return strings.TrimRight(bodyArg, "\n\r\t "), true, nil
 	}
-	stdinBytes, err := io.ReadAll(a.Stdin)
+	body, err := a.readStdinBody()
 	if err != nil {
-		return "", false, fmt.Errorf("read body from stdin: %w", err)
+		return "", false, err
 	}
-	body := strings.TrimRight(string(stdinBytes), "\n\r\t ")
 	if body == "" {
 		return "", false, nil
 	}

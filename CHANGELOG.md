@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- `ant append <id>` command. Joins new content onto an existing entry's body with a blank-line-flanked markdown `---` rule, so the entry still renders as distinct sections when exported through a markdown viewer. Supports `--body <text>`, `--body @<file>`, `--body -` for explicit stdin, and implicit stdin when `--body` is omitted.
+- `--body -` recognised by `add`, `edit`, and `append` as an explicit stdin source, in line with common Unix tool convention. The implicit "no `--body`, read stdin" behaviour is unchanged.
+- Unknown-command hint when the typed verb matches a conventional kind (e.g. `ant note add ...` → suggests `ant add --kind note ...`). Aimed at the `ait`/`ant` muscle-memory slip.
+
+### Changed
+- `add`, `edit`, and `append` `--help` output now includes a single-quoted heredoc example.
+
 ## [1.3.0] - 2026-05-04
 ### Added
 - `ant self-update` command. Downloads the matching binary for your OS/arch from the latest GitHub release, verifies it against the published `SHA256SUMS`, and atomically replaces the running executable. Release notes appear inside the confirmation prompt.

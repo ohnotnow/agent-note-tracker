@@ -85,7 +85,11 @@ ant init --prefix myproject               # override the inferred prefix
 
 ant add --body "rationale text"           # literal body
 ant add --body @path/to/file.md           # body from file
-echo "rationale" | ant add                # body from stdin
+echo "rationale" | ant add                # implicit stdin
+ant add --body - <<'EOF'                  # explicit stdin via heredoc
+Multi-line body. Single-quoted 'EOF' means no shell expansion —
+backticks and $vars stay literal.
+EOF
 
 ant add --title "Choose sqlite" --kind adr --issue ait-AbCdE.2 \
         --body "we picked modernc/sqlite over CGO bindings because…"
@@ -94,8 +98,10 @@ ant add --title "Choose sqlite" --kind adr --issue ait-AbCdE.2 \
 `--issue` is free-form; if you use ait it'll match an ait id, but Jira /
 Linear / GitHub ids work just as well — ant doesn't validate the value.
 
-For non-trivial bodies, write a temp file and use @file; heredocs are fragile 
-when the body contains backticks.
+For non-trivial bodies, the safest options are `--body @file` or a
+single-quoted heredoc (`<<'EOF' ... EOF`). The single-quoted delimiter
+disables shell expansion, so backticks, `$variables`, and apostrophes
+all survive untouched.
 
 ## Recall — the four read-side moments
 
@@ -130,11 +136,32 @@ ant edit <id> --title "New title"         # change one column
 ant edit <id> --issue ""                  # clear a column (empty string)
 echo "new body" | ant edit <id>           # replace body via stdin
 ant edit <id> --body @path/to/new.md      # replace body from file
+ant edit <id> --body - <<'EOF'            # explicit stdin via heredoc
+Rewritten body, apostrophes and `backticks` fine.
+EOF
 
 ant export <id>                           # render one entry as markdown
 ant export --kind adr                     # render every ADR as markdown
 ant export --json                         # JSON instead of markdown
 ```
+
+`edit` replaces the body wholesale. To **grow** an entry instead — a
+later clarification, a link to a follow-up note, a dated update — use
+`append`:
+
+```bash
+ant append <id> --body "2026-05-15: linked to demo-FgHiJ"
+ant append <id> --body @path/to/update.md
+ant append <id> --body - <<'EOF'
+Multi-line update via heredoc.
+EOF
+```
+
+`append` joins the new content onto the existing body with a blank line,
+a markdown `---` rule, and another blank line — so the entry renders as
+distinct sections when exported through a markdown viewer. Reach for it
+for small clarifications and dated updates; create a sibling `pivot`
+entry when the change is structural enough to deserve its own id.
 
 `export` is how a personal entry gets promoted to project documentation:
 pipe it into a PR description, save it as a doc file, share it as a gist.
@@ -165,10 +192,10 @@ Default output is JSON. Pipe to `jq` for ad-hoc shaping, or use
   envelope leaves room for sibling fields (counts, cursors) without
   breaking consumers, so check `.entries` rather than treating the top
   level as the array itself.
-- **Mutations are slim by default.** `add`, `edit`, and `delete` echo
-  back `{id, kind, title?, issue_id?, created_at}` — no body, no
-  `updated_at`. Pass `--long` to get the full record back when you
-  actually need it (e.g. confirming a body change took effect).
+- **Mutations are slim by default.** `add`, `edit`, `append`, and
+  `delete` echo back `{id, kind, title?, issue_id?, created_at}` — no
+  body, no `updated_at`. Pass `--long` to get the full record back when
+  you actually need it (e.g. confirming a body change took effect).
 - **Errors** go to stderr as `{"error": {"code": "...", "message":
   "..."}}` and the process exits non-zero. Stable codes:
   `not_found`, `validation_error`, `conflict`, `confirmation_required`,

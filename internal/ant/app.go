@@ -115,6 +115,8 @@ func (a *App) dispatch(cmd string, args []string) error {
 		return a.Show(args)
 	case "edit":
 		return a.Edit(args)
+	case "append":
+		return a.Append(args)
 	case "delete":
 		return a.Delete(args)
 	case "list":
@@ -136,8 +138,32 @@ func (a *App) dispatch(cmd string, args []string) error {
 	case "completion":
 		return a.Completion(args)
 	default:
+		if kind, ok := suggestKind(cmd); ok {
+			return NewError(CodeValidationError,
+				"unknown command %q — looks like a kind name (ant is the sibling of ait, but their verbs differ). To create: 'ant add --kind %s ...' ; to retrieve: 'ant list --kind %s'",
+				cmd, kind, kind)
+		}
 		return NewError(CodeValidationError, "unknown command %q", cmd)
 	}
+}
+
+// suggestKind maps a mistyped verb to a conventional entry kind, used to nudge
+// users who reach for an ait-shaped reflex (e.g. `ant note add ...`) toward
+// the real ant form (`ant add --kind note ...`). Only the conventional kinds
+// are matched — free-form kinds the user has invented for their own project
+// wouldn't be recognisable as command typos anyway.
+func suggestKind(cmd string) (string, bool) {
+	// `foundation` deliberately omitted — it has a real top-level command of
+	// its own and so never reaches the unknown-command path.
+	switch cmd {
+	case KindNote, "notes":
+		return KindNote, true
+	case KindADR, "adrs":
+		return KindADR, true
+	case KindPivot, "pivots":
+		return KindPivot, true
+	}
+	return "", false
 }
 
 // writeJSON pretty-prints v as JSON to stdout.

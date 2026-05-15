@@ -86,6 +86,18 @@ func TestAdd_FromStdin(t *testing.T) {
 	}
 }
 
+func TestAdd_ExplicitStdinFlag(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	ta.Stdin = strings.NewReader("body via --body -\n")
+
+	var got Entry
+	ta.run(t, &got, "add", "--long", "--body", "-")
+	if got.Body != "body via --body -" {
+		t.Errorf("body = %q, want 'body via --body -'", got.Body)
+	}
+}
+
 func TestAdd_FromFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "body.md")
