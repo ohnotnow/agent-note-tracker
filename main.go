@@ -79,6 +79,8 @@ func run(args []string) error {
 	case "-h", "--help", "help":
 		fmt.Print(usage)
 		return nil
+	case "-v", "--version":
+		cmd = "version"
 	}
 
 	app := ant.New(dbPath, stdinReader(cmd), os.Stdout, os.Stderr)

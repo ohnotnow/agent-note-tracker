@@ -58,7 +58,7 @@ func (a *App) Version(args []string) error {
 
 	if isNewer(latest, Version) {
 		fmt.Fprintf(a.Stdout, "A newer version (%s) is available.\n", latest)
-		fmt.Fprintf(a.Stdout, "Visit %s/releases/latest to update.\n", RepoURL)
+		fmt.Fprintf(a.Stdout, "Visit %s/releases/latest to update, or run `ant self-update`.\n", RepoURL)
 	} else {
 		fmt.Fprintln(a.Stdout, "You are running the latest version.")
 	}

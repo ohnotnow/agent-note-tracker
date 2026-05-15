@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-05-15
+### Changed
+- `ant --version` and `ant -v` now work as aliases for `ant version`, matching `--help`/`-h` and the convention used by `ait`.
+- The "newer version available" hint now ends with "or run `ant self-update`", so the next step is visible inline rather than only in the docs.
+
 ## [1.4.0] - 2026-05-15
 ### Added
 - `ant append <id>` command. Joins new content onto an existing entry's body with a blank-line-flanked markdown `---` rule, so the entry still renders as distinct sections when exported through a markdown viewer. Supports `--body <text>`, `--body @<file>`, `--body -` for explicit stdin, and implicit stdin when `--body` is omitted.
