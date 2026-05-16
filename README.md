@@ -147,7 +147,7 @@ use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
 | --- | --- |
 | `ant init [--prefix p]` | Create `.ant/`, run migrations, set the prefix, add gitignore entry |
 | `ant config` | Show prefix, schema version, resolved DB path |
-| `ant add` | Capture a new entry (body via `--body`, `--body @file`, or stdin) |
+| `ant add` (alias: `ant create`) | Capture a new entry (body via `--body`, `--body @file`, or stdin) |
 | `ant show <id>` | Full record for one entry |
 | `ant edit <id>` | Update body / title / kind / issue (empty `--title`/`--issue` clears) |
 | `ant append <id>` | Add content to an existing entry, separated by a markdown `---` rule |

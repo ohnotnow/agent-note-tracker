@@ -109,7 +109,7 @@ func (a *App) dispatch(cmd string, args []string) error {
 		return a.Init(args)
 	case "config":
 		return a.Config(args)
-	case "add":
+	case "add", "create":
 		return a.Add(args)
 	case "show":
 		return a.Show(args)

@@ -135,6 +135,21 @@ func TestAdd_RequiresInit(t *testing.T) {
 	}
 }
 
+func TestCreate_AliasForAdd(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+
+	var got Entry
+	ta.run(t, &got, "create", "--long", "--body", "via create")
+
+	if got.Body != "via create" {
+		t.Errorf("body = %q, want %q", got.Body, "via create")
+	}
+	if !strings.HasPrefix(got.PublicID, "demo-") {
+		t.Errorf("public_id = %q, want demo- prefix", got.PublicID)
+	}
+}
+
 func TestAdd_UniquePublicIDs(t *testing.T) {
 	ta := newTestApp(t)
 	initDemo(t, ta, "demo")

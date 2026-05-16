@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- `ant create` as an alias for `ant add`. Matches the verb used by the sibling `ait` tool, so agents juggling both no longer trip over the differing command names.
+
 ## [1.4.1] - 2026-05-15
 ### Changed
 - `ant --version` and `ant -v` now work as aliases for `ant version`, matching `--help`/`-h` and the convention used by `ait`.

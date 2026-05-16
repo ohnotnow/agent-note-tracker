@@ -12,7 +12,7 @@ _ant_complete() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    local commands="init config add show edit append delete list recent search for foundation export version completion"
+    local commands="init config add create show edit append delete list recent search for foundation export version completion"
     local kinds="note adr pivot foundation"
     # Commands whose first positional argument is an entry id.
     local id_commands="show edit append delete export"
@@ -62,6 +62,7 @@ _ant() {
         'init:initialise the .ant/ database'
         'config:show prefix, schema version, db path'
         'add:capture a new entry'
+        'create:capture a new entry (alias for add)'
         'show:show full entry detail'
         'edit:update an existing entry'
         'append:append to an existing entry, divided by a markdown rule'
@@ -130,7 +131,7 @@ _ant() {
                         _ant_entry_ids
                     fi
                     ;;
-                add)
+                add|create)
                     _arguments \
                         '--body[entry body, @file, or - for stdin]:body:' \
                         '--title[entry title]:title:' \
