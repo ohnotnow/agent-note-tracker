@@ -11,7 +11,14 @@ import (
 // any value is a breaking change. Mirrors ait's vocabulary so that an agent
 // hopping between the two tools can use one switch on err.code.
 const (
-	CodeNotFound             = "not_found"
+	CodeNotFound = "not_found"
+	// CodeUsage is for CLI-grammar failures — the invocation itself is
+	// malformed: unknown command, unknown flag, missing/extra positional,
+	// mutually-exclusive flags. CodeValidationError is for content failures —
+	// the invocation parsed fine but a value is semantically invalid (empty
+	// body, unparseable date). The split mirrors ait, which pairs CodeUsage
+	// with exit 64 (see ExitCodeFor).
+	CodeUsage                = "usage"
 	CodeValidationError      = "validation_error"
 	CodeConflict             = "conflict"
 	CodeConfirmationRequired = "confirmation_required"
@@ -93,6 +100,17 @@ func ExitCode(err error) (int, bool) {
 		return e.code, true
 	}
 	return 0, false
+}
+
+// ExitCodeFor maps an error to a shell exit code from its CodedError code.
+// Usage-class failures (CodeUsage) exit 64 (EX_USAGE), matching ait so a
+// wrapper reads the same signal from both tools. Everything else is 1.
+func ExitCodeFor(err error) int {
+	var ce *CodedError
+	if errors.As(err, &ce) && ce.Code == CodeUsage {
+		return 64
+	}
+	return 1
 }
 
 // silentExit reports whether err is an exitError whose embedded cause is

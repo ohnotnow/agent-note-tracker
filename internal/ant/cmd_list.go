@@ -17,6 +17,10 @@ import (
 //   --issue <id>       filter by issue_id
 //   --since <date>     created_at >= date (YYYY-MM-DD or RFC3339)
 func (a *App) List(args []string) error {
+	args, err := canonicaliseAliases(args)
+	if err != nil {
+		return err
+	}
 	fs := flag.NewFlagSet("list", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
 	var (
@@ -35,11 +39,11 @@ func (a *App) List(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant list [--long | --human] [--kind <k>] [--issue <id>] [--since <date>]")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 	if long && human {
-		return NewError(CodeValidationError, "--long and --human are mutually exclusive")
+		return NewError(CodeUsage, "--long and --human are mutually exclusive")
 	}
 
 	since, err := parseSince(sinceIn)

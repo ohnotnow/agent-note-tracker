@@ -21,7 +21,7 @@ func (a *App) Config(args []string) error {
 	fs.Usage = func() {
 		fmt.Fprintln(a.Stderr, "usage: ant config")
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 

@@ -38,7 +38,7 @@ func (a *App) Init(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant init [--prefix <name>]")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 

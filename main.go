@@ -56,7 +56,8 @@ func main() {
 	}
 	// Anything that surfaced from app.Dispatch has already been written to
 	// stderr as a JSON envelope; main just sets the failing exit code.
-	os.Exit(1)
+	// Usage-class failures exit 64 (EX_USAGE), matching ait; everything else 1.
+	os.Exit(ant.ExitCodeFor(err))
 }
 
 func run(args []string) error {
@@ -115,7 +116,7 @@ func extractDBFlag(args []string) (string, []string, error) {
 		switch {
 		case a == "--db":
 			if i+1 >= len(args) {
-				return "", nil, ant.NewError(ant.CodeValidationError, "--db requires a value")
+				return "", nil, ant.NewError(ant.CodeUsage, "--db requires a value")
 			}
 			dbPath = args[i+1]
 			args = append(args[:i], args[i+2:]...)

@@ -25,11 +25,11 @@ func (a *App) Foundation(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant foundation")
 		fmt.Fprintln(a.Stderr, "  Print the single foundation entry, if one has been recorded.")
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 	if fs.NArg() != 0 {
-		return NewError(CodeValidationError, "usage: ant foundation")
+		return NewError(CodeUsage, "usage: ant foundation")
 	}
 
 	store, _, err := a.requireInitialised()

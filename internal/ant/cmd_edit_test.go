@@ -28,6 +28,21 @@ func TestEdit_BodyViaFlag(t *testing.T) {
 	}
 }
 
+// 'update' is an input alias for 'edit', accepted purely so the ait
+// muscle-memory verb (ait has both 'edit' and 'update') doesn't get
+// rejected on ant. It must behave identically to 'edit'.
+func TestEdit_UpdateAlias(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	id := addAndID(t, ta)
+
+	var got Entry
+	ta.run(t, &got, "update", id, "--long", "--title", "via update alias")
+	if got.Title != "via update alias" {
+		t.Errorf("title = %q, want 'via update alias'", got.Title)
+	}
+}
+
 func TestEdit_BodyViaStdin(t *testing.T) {
 	ta := newTestApp(t)
 	initDemo(t, ta, "demo")

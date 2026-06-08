@@ -36,7 +36,7 @@ func (a *App) SelfUpdate(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant self-update [--check] [--yes]")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 

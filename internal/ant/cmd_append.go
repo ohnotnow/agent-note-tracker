@@ -27,9 +27,13 @@ const appendSeparator = "\n\n---\n\n"
 // append that adds nothing is almost certainly a mistake (the body would gain
 // only a trailing separator).
 func (a *App) Append(args []string) error {
+	args, err := canonicaliseAliases(args)
+	if err != nil {
+		return err
+	}
 	id, flagArgs, err := extractPositional(args, appendStringFlags)
 	if err != nil {
-		return NewError(CodeValidationError, "%v: usage: ant append <id> [flags]", err)
+		return NewError(CodeUsage, "%v: usage: ant append <id> [flags]", err)
 	}
 
 	fs := flag.NewFlagSet("append", flag.ContinueOnError)
@@ -51,14 +55,14 @@ func (a *App) Append(args []string) error {
 		fmt.Fprintln(a.Stderr, "  EOF")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(flagArgs); err != nil {
+	if err := a.parseFlags(fs, flagArgs); err != nil {
 		return err
 	}
 	if id == "" {
-		return NewError(CodeValidationError, "usage: ant append <id> [flags]")
+		return NewError(CodeUsage, "usage: ant append <id> [flags]")
 	}
 	if fs.NArg() != 0 {
-		return NewError(CodeValidationError, "usage: ant append <id> [flags]")
+		return NewError(CodeUsage, "usage: ant append <id> [flags]")
 	}
 
 	addition, err := a.resolveBody(bodyArg)

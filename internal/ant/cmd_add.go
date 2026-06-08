@@ -18,6 +18,10 @@ import (
 //
 // Other flags: --title, --kind (default 'note'), --issue.
 func (a *App) Add(args []string) error {
+	args, err := canonicaliseAliases(args)
+	if err != nil {
+		return err
+	}
 	fs := flag.NewFlagSet("add", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
 	var (
@@ -41,7 +45,7 @@ func (a *App) Add(args []string) error {
 		fmt.Fprintln(a.Stderr, "  EOF")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 

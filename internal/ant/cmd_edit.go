@@ -25,9 +25,13 @@ import (
 //
 // To grow an entry rather than replace it, see 'ant append'.
 func (a *App) Edit(args []string) error {
+	args, err := canonicaliseAliases(args)
+	if err != nil {
+		return err
+	}
 	id, flagArgs, err := extractPositional(args, editStringFlags)
 	if err != nil {
-		return NewError(CodeValidationError, "%v: usage: ant edit <id> [flags]", err)
+		return NewError(CodeUsage, "%v: usage: ant edit <id> [flags]", err)
 	}
 
 	fs := flag.NewFlagSet("edit", flag.ContinueOnError)
@@ -57,19 +61,19 @@ func (a *App) Edit(args []string) error {
 		fmt.Fprintln(a.Stderr, "  EOF")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(flagArgs); err != nil {
+	if err := a.parseFlags(fs, flagArgs); err != nil {
 		return err
 	}
 	if id == "" {
-		return NewError(CodeValidationError, "usage: ant edit <id> [flags]")
+		return NewError(CodeUsage, "usage: ant edit <id> [flags]")
 	}
 	if fs.NArg() != 0 {
-		return NewError(CodeValidationError, "usage: ant edit <id> [flags]")
+		return NewError(CodeUsage, "usage: ant edit <id> [flags]")
 	}
 
 	set := setFlags(fs)
 	if visual && set["body"] {
-		return NewError(CodeValidationError, "--visual and --body are mutually exclusive")
+		return NewError(CodeUsage, "--visual and --body are mutually exclusive")
 	}
 
 	store, _, err := a.requireInitialised()

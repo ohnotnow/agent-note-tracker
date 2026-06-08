@@ -17,7 +17,7 @@ func (a *App) Recent(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant recent [--limit <n>]")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 	if limit <= 0 {

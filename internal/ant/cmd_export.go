@@ -26,9 +26,13 @@ var exportFlagsWithValue = map[string]bool{
 // --json switches the output to a JSON array of full Entry records (the same
 // shape as 'list --long'), suitable for piping to jq or other tools.
 func (a *App) Export(args []string) error {
-	id, flagArgs, err := extractPositional(args, exportFlagsWithValue)
+	args, err := canonicaliseAliases(args)
 	if err != nil {
 		return err
+	}
+	id, flagArgs, err := extractPositional(args, exportFlagsWithValue)
+	if err != nil {
+		return NewError(CodeUsage, "%v: usage: ant export [<id>] [filters]", err)
 	}
 
 	fs := flag.NewFlagSet("export", flag.ContinueOnError)
@@ -47,11 +51,11 @@ func (a *App) Export(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant export [<id>] [--kind <k>] [--issue <id>] [--since <date>] [--json]")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(flagArgs); err != nil {
+	if err := a.parseFlags(fs, flagArgs); err != nil {
 		return err
 	}
 	if id != "" && (kind != "" || issue != "" || sinceIn != "") {
-		return NewError(CodeValidationError, "can't combine <id> argument with --kind/--issue/--since")
+		return NewError(CodeUsage, "can't combine <id> argument with --kind/--issue/--since")
 	}
 
 	since, err := parseSince(sinceIn)

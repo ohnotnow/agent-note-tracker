@@ -19,7 +19,7 @@ import (
 func (a *App) Delete(args []string) error {
 	id, flagArgs, err := extractPositional(args, nil)
 	if err != nil {
-		return NewError(CodeValidationError, "%v: usage: ant delete <id>", err)
+		return NewError(CodeUsage, "%v: usage: ant delete <id>", err)
 	}
 	fs := flag.NewFlagSet("delete", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
@@ -33,14 +33,14 @@ func (a *App) Delete(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant delete <id> [--force] [--long]")
 		fs.PrintDefaults()
 	}
-	if err := fs.Parse(flagArgs); err != nil {
+	if err := a.parseFlags(fs, flagArgs); err != nil {
 		return err
 	}
 	if id == "" {
-		return NewError(CodeValidationError, "usage: ant delete <id>")
+		return NewError(CodeUsage, "usage: ant delete <id>")
 	}
 	if fs.NArg() != 0 {
-		return NewError(CodeValidationError, "usage: ant delete <id>")
+		return NewError(CodeUsage, "usage: ant delete <id>")
 	}
 
 	store, _, err := a.requireInitialised()

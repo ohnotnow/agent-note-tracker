@@ -153,11 +153,11 @@ func (a *App) Completion(args []string) error {
 	fs.Usage = func() {
 		fmt.Fprintln(a.Stderr, "usage: ant completion {bash|zsh}")
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return NewError(CodeValidationError, "usage: ant completion {bash|zsh}")
+		return NewError(CodeUsage, "usage: ant completion {bash|zsh}")
 	}
 	switch fs.Arg(0) {
 	case "bash":

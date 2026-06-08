@@ -18,11 +18,11 @@ func (a *App) For(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant for <issue-id>")
 		fmt.Fprintln(a.Stderr, "  Returns entries whose issue_id exactly matches the argument.")
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 	if fs.NArg() != 1 {
-		return NewError(CodeValidationError, "usage: ant for <issue-id>")
+		return NewError(CodeUsage, "usage: ant for <issue-id>")
 	}
 	issue := fs.Arg(0)
 

@@ -113,7 +113,7 @@ func (a *App) dispatch(cmd string, args []string) error {
 		return a.Add(args)
 	case "show":
 		return a.Show(args)
-	case "edit":
+	case "edit", "update":
 		return a.Edit(args)
 	case "append":
 		return a.Append(args)
@@ -139,11 +139,11 @@ func (a *App) dispatch(cmd string, args []string) error {
 		return a.Completion(args)
 	default:
 		if kind, ok := suggestKind(cmd); ok {
-			return NewError(CodeValidationError,
+			return NewError(CodeUsage,
 				"unknown command %q — looks like a kind name (ant is the sibling of ait, but their verbs differ). To create: 'ant add --kind %s ...' ; to retrieve: 'ant list --kind %s'",
 				cmd, kind, kind)
 		}
-		return NewError(CodeValidationError, "unknown command %q", cmd)
+		return NewError(CodeUsage, "unknown command %q", cmd)
 	}
 }
 
@@ -164,6 +164,40 @@ func suggestKind(cmd string) (string, bool) {
 		return KindPivot, true
 	}
 	return "", false
+}
+
+// parseFlags parses args with fs while suppressing the Go flag package's own
+// error text and usage block, so a failed parse yields only our clean JSON
+// error envelope (ait behaves the same — no raw usage dump). A malformed or
+// unknown flag is returned as a CodeUsage error.
+//
+// The --help path is preserved: during Parse the FlagSet's output is sent to
+// io.Discard and its usage callback is swapped for a no-op (Go invokes usage on
+// both the help and error paths, and we don't want it leaking on the error
+// path). On flag.ErrHelp we restore the original output and usage and invoke it
+// once, so 'ant <cmd> --help' still prints its block — then return ErrHelp,
+// which Dispatch and main treat as a clean, requested help dump.
+func (a *App) parseFlags(fs *flag.FlagSet, args []string) error {
+	origOut := fs.Output()
+	origUsage := fs.Usage
+	fs.SetOutput(io.Discard)
+	fs.Usage = func() {}
+
+	err := fs.Parse(args)
+
+	fs.SetOutput(origOut)
+	fs.Usage = origUsage
+
+	if errors.Is(err, flag.ErrHelp) {
+		if origUsage != nil {
+			origUsage()
+		}
+		return err
+	}
+	if err != nil {
+		return NewError(CodeUsage, "%v", err)
+	}
+	return nil
 }
 
 // writeJSON pretty-prints v as JSON to stdout.

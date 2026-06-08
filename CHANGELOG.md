@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-06-07
+### Added
+- `ant update` accepted as an alias for `ant edit`, matching the sibling `ait` tool (which takes both). Continues the `create`/`add` aliasing from 1.4.2. Input-only — output, help, and docs still use `edit`.
+- `--type` and `--description` accepted as input aliases for `--kind` and `--body` on `add`, `edit`, `list`, and `export`, matching `ait`'s flag names. Output keys are unchanged (still `kind`). Supplying both spellings of the same field at once is rejected.
+- `usage` error code in the JSON error-envelope vocabulary, paired with shell exit code `64` (`EX_USAGE`) for command-line grammar mistakes — mirroring `ait`, so a wrapper can read the same signal from both tools.
+
+### Changed
+- Command-line grammar failures (unknown command, unknown flag, a missing or extra positional argument, mutually-exclusive flags, a `--db` with no value) now return error code `usage` and exit `64`, rather than `validation_error`/`internal_error` at exit `1`. Genuine value errors (empty body, an unparseable `--since`, an out-of-range `--limit`) still use `validation_error` at exit `1`.
+
+### Fixed
+- An invalid or unknown flag no longer dumps Go's raw `flag`-package usage block to stderr alongside the JSON error. Only the clean `{"error": …}` envelope is emitted now — for example `ant list --tree` previously printed a usage block plus an `internal_error`, and now returns just a `usage` envelope.
+
 ## [1.4.2] - 2026-05-16
 ### Added
 - `ant create` as an alias for `ant add`. Matches the verb used by the sibling `ait` tool, so agents juggling both no longer trip over the differing command names.
@@ -62,6 +74,10 @@ First stable release. No code changes from `v0.3.0` — this tag marks the publi
 
 ## [0.1.0] - 2026-05-01
 
+[1.5.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.4.2...v1.5.0
+[1.4.2]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.4.1...v1.4.2
+[1.4.1]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.1.0...v1.2.0

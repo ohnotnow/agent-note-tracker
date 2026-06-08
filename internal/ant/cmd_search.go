@@ -19,12 +19,12 @@ func (a *App) Search(args []string) error {
 		fmt.Fprintln(a.Stderr, "usage: ant search <query> [more terms...]")
 		fmt.Fprintln(a.Stderr, "  Multi-term queries are ANDed across title and body, case-insensitive.")
 	}
-	if err := fs.Parse(args); err != nil {
+	if err := a.parseFlags(fs, args); err != nil {
 		return err
 	}
 	terms := strings.Fields(strings.Join(fs.Args(), " "))
 	if len(terms) == 0 {
-		return NewError(CodeValidationError, "usage: ant search <query>")
+		return NewError(CodeUsage, "usage: ant search <query>")
 	}
 
 	store, _, err := a.requireInitialised()
