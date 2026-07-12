@@ -81,7 +81,9 @@ ant export --json                    # JSON instead of markdown
 ## Personal by default
 
 The database lives at `.ant/ant.db` at the git repo root, and `ant init`
-quietly adds `.ant/` to `.gitignore` for you.
+adds `.ant/` to `.gitignore` for you. When it can't — no `.git` directory
+yet — its JSON output says so in a `note` field rather than leaving you to
+find out at the next `git status`.
 
 That's on purpose. A lot of what ends up in here is personal working
 memory: preferences, half-formed grumbles, "fine, just ship it" decisions

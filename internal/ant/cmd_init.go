@@ -9,12 +9,15 @@ import (
 
 // InitResult is the JSON payload emitted by 'ant init'.
 type InitResult struct {
-	DB                string `json:"db"`
-	Prefix            string `json:"prefix"`
-	SchemaVersion     int    `json:"schema_version"`
-	Created           bool   `json:"created"`
-	Rekeyed           bool   `json:"rekeyed,omitempty"`
-	GitignoreUpdated  bool   `json:"gitignore_updated,omitempty"`
+	DB               string `json:"db"`
+	Prefix           string `json:"prefix"`
+	SchemaVersion    int    `json:"schema_version"`
+	Created          bool   `json:"created"`
+	Rekeyed          bool   `json:"rekeyed,omitempty"`
+	GitignoreUpdated bool   `json:"gitignore_updated,omitempty"`
+	// Note surfaces a judgement call the user would otherwise only discover
+	// later (e.g. no .git directory, so nothing was added to .gitignore).
+	Note string `json:"note,omitempty"`
 }
 
 // Init handles 'ant init [--prefix <name>]'.
@@ -84,25 +87,31 @@ func (a *App) Init(args []string) error {
 	}
 
 	gitignoreUpdated := false
+	noGitRepo := false
 	if dbPath != MemoryDB {
 		if root, rerr := FindRoot(); rerr == nil {
-			updated, gerr := EnsureGitignore(root)
+			updated, noGit, gerr := EnsureGitignore(root)
 			if gerr != nil {
 				fmt.Fprintf(a.Stderr, "warning: could not update .gitignore: %v\n", gerr)
 			} else {
 				gitignoreUpdated = updated
+				noGitRepo = noGit
 			}
 		}
 	}
 
-	return a.writeJSON(InitResult{
+	result := InitResult{
 		DB:               dbPath,
 		Prefix:           prefix,
 		SchemaVersion:    schema,
 		Created:          !hadExisting,
 		Rekeyed:          rekey,
 		GitignoreUpdated: gitignoreUpdated,
-	})
+	}
+	if noGitRepo {
+		result.Note = "no .git directory — not adding .ant/ to .gitignore"
+	}
+	return a.writeJSON(result)
 }
 
 // chooseInitPrefix applies the precedence rules from Init's docstring and

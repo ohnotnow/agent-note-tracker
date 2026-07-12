@@ -14,13 +14,14 @@ const gitignoreEntry = ".ant/"
 
 // EnsureGitignore appends gitignoreEntry to <root>/.gitignore if a git repo
 // is present and the entry is not already listed. Returns whether the file
-// was modified. No-op (and returns false) when there is no .git directory at
-// root, so it's safe to call unconditionally from Init.
-func EnsureGitignore(root string) (bool, error) {
+// was modified and — so Init can surface the gap in its output — whether it
+// was skipped because there is no .git directory at root. Safe to call
+// unconditionally from Init.
+func EnsureGitignore(root string) (updated bool, noGit bool, err error) {
 	if _, err := os.Stat(filepath.Join(root, ".git")); errors.Is(err, fs.ErrNotExist) {
-		return false, nil
+		return false, true, nil
 	} else if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	path := filepath.Join(root, ".gitignore")
@@ -28,11 +29,11 @@ func EnsureGitignore(root string) (bool, error) {
 	if errors.Is(err, fs.ErrNotExist) {
 		content = nil
 	} else if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	if gitignoreContains(content, ".ant") {
-		return false, nil
+		return false, false, nil
 	}
 
 	var leader string
@@ -41,9 +42,9 @@ func EnsureGitignore(root string) (bool, error) {
 	}
 	out := append(content, []byte(leader+gitignoreEntry+"\n")...)
 	if err := os.WriteFile(path, out, 0o644); err != nil {
-		return false, err
+		return false, false, err
 	}
-	return true, nil
+	return true, false, nil
 }
 
 // gitignoreContains reports whether the given file content already lists

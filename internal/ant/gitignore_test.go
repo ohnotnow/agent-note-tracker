@@ -19,7 +19,7 @@ func withGitDir(t *testing.T) string {
 
 func TestEnsureGitignore_NoFileYet(t *testing.T) {
 	dir := withGitDir(t)
-	changed, err := EnsureGitignore(dir)
+	changed, _, err := EnsureGitignore(dir)
 	if err != nil {
 		t.Fatalf("EnsureGitignore: %v", err)
 	}
@@ -41,7 +41,7 @@ func TestEnsureGitignore_AppendsToExisting(t *testing.T) {
 	if err := os.WriteFile(path, []byte("vendor/\nlogs/\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	changed, err := EnsureGitignore(dir)
+	changed, _, err := EnsureGitignore(dir)
 	if err != nil || !changed {
 		t.Fatalf("EnsureGitignore changed=%v err=%v", changed, err)
 	}
@@ -56,7 +56,7 @@ func TestEnsureGitignore_HandlesMissingTrailingNewline(t *testing.T) {
 	dir := withGitDir(t)
 	path := filepath.Join(dir, ".gitignore")
 	_ = os.WriteFile(path, []byte("vendor/"), 0o644)
-	changed, err := EnsureGitignore(dir)
+	changed, _, err := EnsureGitignore(dir)
 	if err != nil || !changed {
 		t.Fatalf("EnsureGitignore: changed=%v err=%v", changed, err)
 	}
@@ -80,7 +80,7 @@ func TestEnsureGitignore_AlreadyListed(t *testing.T) {
 			dir := withGitDir(t)
 			path := filepath.Join(dir, ".gitignore")
 			_ = os.WriteFile(path, []byte(original), 0o644)
-			changed, err := EnsureGitignore(dir)
+			changed, _, err := EnsureGitignore(dir)
 			if err != nil {
 				t.Fatalf("EnsureGitignore: %v", err)
 			}
@@ -97,12 +97,15 @@ func TestEnsureGitignore_AlreadyListed(t *testing.T) {
 
 func TestEnsureGitignore_NoGitRepo(t *testing.T) {
 	dir := t.TempDir()
-	changed, err := EnsureGitignore(dir)
+	changed, noGit, err := EnsureGitignore(dir)
 	if err != nil {
 		t.Fatalf("EnsureGitignore: %v", err)
 	}
 	if changed {
 		t.Error("expected changed=false outside a git repo")
+	}
+	if !noGit {
+		t.Error("expected noGit=true outside a git repo")
 	}
 	if _, err := os.Stat(filepath.Join(dir, ".gitignore")); !errors.Is(err, fs.ErrNotExist) {
 		t.Error("expected no .gitignore created outside a git repo")
@@ -113,7 +116,7 @@ func TestEnsureGitignore_IgnoresCommentsAndNegations(t *testing.T) {
 	dir := withGitDir(t)
 	path := filepath.Join(dir, ".gitignore")
 	_ = os.WriteFile(path, []byte("# .ant/\n!.ant\n"), 0o644)
-	changed, err := EnsureGitignore(dir)
+	changed, _, err := EnsureGitignore(dir)
 	if err != nil || !changed {
 		t.Fatalf("EnsureGitignore: changed=%v err=%v", changed, err)
 	}
