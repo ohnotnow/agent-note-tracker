@@ -12,7 +12,7 @@ import (
 
 // Version is the build version. Override at build time with:
 //
-//	go build -ldflags "-X agent-note-tracker/internal/ant.Version=v0.1.0"
+//	go build -ldflags "-X github.com/ohnotnow/agent-note-tracker/internal/ant.Version=v0.1.0"
 //
 // The default of "dev" makes a development build obvious in the version
 // output and disables the GitHub release-check (no point comparing a dev

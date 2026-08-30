@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-08-29
+### Fixed
+- The self-update redirect for go-install users printed `go install github.com/ohnotnow/agent-note-tracker@latest`, a command that could never work: `go.mod` declared the bare module name `agent-note-tracker`, and Go refuses to install a module whose declared path doesn't match the path you asked for. The module is now declared under its full GitHub path and the hint points at `github.com/ohnotnow/agent-note-tracker/cmd/ant@latest`, which installs a binary actually named `ant`. Mirrors the same fix in the sibling `ait` tool (v1.15.0). `go install` works from this release's tag onwards.
+
+### Changed
+- The main package moved from the repository root to `cmd/ant/` in support of the above (with `go install`, the binary is named after the last element of the package path). Local builds are now `go build -o ant ./cmd/ant`; release builds and docs updated to match. No change to the CLI itself.
+
 ## [1.6.0] - 2026-07-12
 ### Added
 - `ant init` JSON output gains a `note` field ("no .git directory — not adding .ant/ to .gitignore") when the gitignore step is skipped because the project isn't a git repository yet. Previously the skip was silent, leaving you to discover it at the next `git status`. Mirrors `ait`'s behaviour.
@@ -78,6 +85,7 @@ First stable release. No code changes from `v0.3.0` — this tag marks the publi
 
 ## [0.1.0] - 2026-05-01
 
+[1.7.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.4.2...v1.5.0
 [1.4.2]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.4.1...v1.4.2

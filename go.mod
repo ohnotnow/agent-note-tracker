@@ -1,4 +1,4 @@
-module agent-note-tracker
+module github.com/ohnotnow/agent-note-tracker
 
 go 1.25.0
 

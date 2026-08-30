@@ -38,7 +38,7 @@ project. Ignore the global CLAUDE.md guidance about Laravel/Lando here.
 ## Code layout
 
 ```
-main.go                          CLI entrypoint, --db extraction
+cmd/ant/main.go                  CLI entrypoint, --db extraction
 internal/ant/app.go              App struct, Dispatch, lazy Store, I/O streams
 internal/ant/store.go            DB connection (opens modernc/sqlite)
 internal/ant/migrate.go          Forward-only schema migrations

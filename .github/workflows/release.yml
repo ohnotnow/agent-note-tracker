@@ -21,19 +21,19 @@ jobs:
       - name: Build binaries
         env:
           VERSION: ${{ github.ref_name }}
-          LDFLAGS: -s -w -X agent-note-tracker/internal/ant.Version=${{ github.ref_name }}
+          LDFLAGS: -s -w -X github.com/ohnotnow/agent-note-tracker/internal/ant.Version=${{ github.ref_name }}
         run: |
           mkdir -p dist
           # macOS
-          GOOS=darwin  GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/ant-darwin-amd64 .
-          GOOS=darwin  GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/ant-darwin-arm64 .
+          GOOS=darwin  GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/ant-darwin-amd64 ./cmd/ant
+          GOOS=darwin  GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/ant-darwin-arm64 ./cmd/ant
 
           # Linux
-          GOOS=linux   GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/ant-linux-amd64 .
-          GOOS=linux   GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/ant-linux-arm64 .
+          GOOS=linux   GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/ant-linux-amd64 ./cmd/ant
+          GOOS=linux   GOARCH=arm64 go build -ldflags="$LDFLAGS" -o dist/ant-linux-arm64 ./cmd/ant
 
           # Windows
-          GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/ant-windows-amd64.exe .
+          GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o dist/ant-windows-amd64.exe ./cmd/ant
 
       - name: Generate checksums
         working-directory: dist

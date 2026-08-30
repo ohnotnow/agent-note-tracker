@@ -10,7 +10,7 @@ import (
 
 	"github.com/mattn/go-isatty"
 
-	"agent-note-tracker/internal/ant"
+	"github.com/ohnotnow/agent-note-tracker/internal/ant"
 )
 
 const usage = `ant — Agent Notebook Tool

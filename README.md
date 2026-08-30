@@ -50,9 +50,9 @@ everything you've ever written down.
 Build from source — Go 1.25+:
 
 ```sh
-go install github.com/ohnotnow/agent-note-tracker@latest      # once tagged
+go install github.com/ohnotnow/agent-note-tracker/cmd/ant@latest      # once tagged
 # or, in this checkout:
-go build -o ant .
+go build -o ant ./cmd/ant
 ```
 
 ## Quick start
@@ -208,10 +208,10 @@ the test suite uses.
 ## Build
 
 ```sh
-go build -o ant .
+go build -o ant ./cmd/ant
 
 # with a stamped version
-go build -ldflags "-X agent-note-tracker/internal/ant.Version=v0.1.0" -o ant .
+go build -ldflags "-X github.com/ohnotnow/agent-note-tracker/internal/ant.Version=v0.1.0" -o ant .
 ```
 
 A stamped (non-`dev`) build will, on `ant version`, do a best-effort
@@ -247,7 +247,7 @@ A few cases short-circuit before any download:
 ## Layout
 
 ```
-main.go                         CLI entrypoint, --db extraction
+cmd/ant/main.go                 CLI entrypoint, --db extraction
 internal/ant/app.go             App struct, command dispatch
 internal/ant/store.go           DB connection
 internal/ant/migrate.go         Forward-only schema migrations

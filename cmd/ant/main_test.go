@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"agent-note-tracker/internal/ant"
+	"github.com/ohnotnow/agent-note-tracker/internal/ant"
 )
 
 // A --db flag with no value is a CLI-grammar error: it must surface as a
