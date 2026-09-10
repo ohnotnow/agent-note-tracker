@@ -169,7 +169,7 @@ func TestEdit_RequiresOneArg(t *testing.T) {
 }
 
 // fakeEditorScript writes a small shell script that overwrites its argument
-// with the given content and returns its path. Used to drive --visual tests
+// with the given content and returns its path. Used to drive --human tests
 // without needing a real interactive editor.
 func fakeEditorScript(t *testing.T, content string) string {
 	t.Helper()
@@ -186,9 +186,9 @@ func shellQuote(s string) string {
 	return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'"
 }
 
-func TestEdit_VisualEditor_UpdatesBody(t *testing.T) {
+func TestEdit_HumanEditor_UpdatesBody(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("--visual test uses a POSIX shell script as the fake editor")
+		t.Skip("--human test uses a POSIX shell script as the fake editor")
 	}
 	t.Setenv("EDITOR", fakeEditorScript(t, "edited via fake editor"))
 
@@ -197,15 +197,15 @@ func TestEdit_VisualEditor_UpdatesBody(t *testing.T) {
 	id := addAndID(t, ta, "--body", "original body")
 
 	var got Entry
-	ta.run(t, &got, "edit", id, "--long", "--visual")
+	ta.run(t, &got, "edit", id, "--long", "--human")
 	if got.Body != "edited via fake editor" {
 		t.Errorf("body = %q, want 'edited via fake editor'", got.Body)
 	}
 }
 
-func TestEdit_VisualEditor_RejectsEmptyResult(t *testing.T) {
+func TestEdit_HumanEditor_RejectsEmptyResult(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("--visual test uses a POSIX shell script as the fake editor")
+		t.Skip("--human test uses a POSIX shell script as the fake editor")
 	}
 	t.Setenv("EDITOR", fakeEditorScript(t, ""))
 
@@ -213,14 +213,14 @@ func TestEdit_VisualEditor_RejectsEmptyResult(t *testing.T) {
 	initDemo(t, ta, "demo")
 	id := addAndID(t, ta, "--body", "original")
 
-	if err := ta.Dispatch("edit", []string{id, "--visual"}); err == nil {
+	if err := ta.Dispatch("edit", []string{id, "--human"}); err == nil {
 		t.Error("expected error when editor produces an empty body")
 	}
 }
 
-func TestEdit_VisualEditor_NoChangeIsNoop(t *testing.T) {
+func TestEdit_HumanEditor_NoChangeIsNoop(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		t.Skip("--visual test uses a POSIX shell script as the fake editor")
+		t.Skip("--human test uses a POSIX shell script as the fake editor")
 	}
 	t.Setenv("EDITOR", fakeEditorScript(t, "untouched"))
 
@@ -232,18 +232,36 @@ func TestEdit_VisualEditor_NoChangeIsNoop(t *testing.T) {
 	ta.run(t, &before, "show", id)
 
 	var got Entry
-	ta.run(t, &got, "edit", id, "--long", "--visual")
+	ta.run(t, &got, "edit", id, "--long", "--human")
 	if got.UpdatedAt != before.UpdatedAt {
 		t.Errorf("updated_at changed despite no body change: before=%q after=%q",
 			before.UpdatedAt, got.UpdatedAt)
 	}
 }
 
-func TestEdit_VisualAndBody_Conflict(t *testing.T) {
+func TestEdit_HumanAndBody_Conflict(t *testing.T) {
 	ta := newTestApp(t)
 	initDemo(t, ta, "demo")
 	id := addAndID(t, ta, "--body", "x")
-	if err := ta.Dispatch("edit", []string{id, "--visual", "--body", "y"}); err == nil {
-		t.Error("expected error when --visual and --body are combined")
+	if err := ta.Dispatch("edit", []string{id, "--human", "--body", "y"}); err == nil {
+		t.Error("expected error when --human and --body are combined")
+	}
+}
+
+// --visual was the original spelling; it stays accepted as an input alias.
+func TestEdit_VisualIsAliasForHuman(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("--human test uses a POSIX shell script as the fake editor")
+	}
+	t.Setenv("EDITOR", fakeEditorScript(t, "edited via alias"))
+
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	id := addAndID(t, ta, "--body", "original body")
+
+	var got Entry
+	ta.run(t, &got, "edit", id, "--long", "--visual")
+	if got.Body != "edited via alias" {
+		t.Errorf("body = %q, want 'edited via alias'", got.Body)
 	}
 }

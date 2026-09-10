@@ -7,9 +7,13 @@ import "strings"
 // reject the ait muscle-memory spelling, we accept it on input. These are
 // INPUT-ONLY: they never appear in help text, usage strings, or output keys
 // (the output key for kind stays "kind"). See epic ant-STIsz, section A.
+//
+// "visual" is the pre-1.8 spelling of --human on 'ant edit'; kept as an
+// input alias so existing muscle memory and scripts keep working.
 var inputFlagAliases = map[string]string{
 	"type":        "kind",
 	"description": "body",
+	"visual":      "human",
 }
 
 // canonicaliseAliases rewrites recognised input-flag aliases in args to their

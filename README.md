@@ -64,6 +64,7 @@ ant init --prefix myproj             # override the inferred prefix
 ant add --body "rationale"           # capture
 ant add --body @path/to/file.md      # capture from file
 echo "rationale" | ant add           # capture from stdin
+ant add --human --title "Why X"      # write the body in $EDITOR
 
 ant recent                           # 5 most recent, with snippets
 ant search "auth refactor"           # multi-term AND across title + body
@@ -72,6 +73,7 @@ ant show ant-AkRXV                   # full detail for one entry
 ant list --kind adr --human          # filtered table view
 
 ant edit ant-AkRXV --title "New"     # replace fields wholesale
+ant edit ant-AkRXV --human           # rewrite the body in $EDITOR
 ant append ant-AkRXV --body "later"  # grow an entry with a dated update
 ant export ant-AkRXV                 # render one entry as markdown
 ant export --kind adr                # render every ADR as markdown
@@ -149,9 +151,9 @@ use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
 | --- | --- |
 | `ant init [--prefix p]` | Create `.ant/`, run migrations, set the prefix, add gitignore entry |
 | `ant config` | Show prefix, schema version, resolved DB path |
-| `ant add` (alias: `ant create`) | Capture a new entry (body via `--body`, `--body @file`, or stdin) |
+| `ant add` (alias: `ant create`) | Capture a new entry (body via `--body`, `--body @file`, stdin, or `--human` for $EDITOR) |
 | `ant show <id>` | Full record for one entry |
-| `ant edit <id>` | Update body / title / kind / issue (empty `--title`/`--issue` clears) |
+| `ant edit <id>` | Update body / title / kind / issue (empty `--title`/`--issue` clears; `--human` opens the body in $EDITOR) |
 | `ant append <id>` | Add content to an existing entry, separated by a markdown `---` rule |
 | `ant delete <id>` | Remove an entry (refuses without `--force`, see below) |
 | `ant list` | List entries; `--long`, `--human`, filters: `--kind`, `--issue`, `--since` |

@@ -15,6 +15,7 @@ import (
 //  2. --body @<path>       — read from a file
 //  3. --body -             — explicit stdin
 //  4. stdin                — when --body is not given
+//  5. --human              — write the body in $EDITOR (pass --title alongside)
 //
 // Other flags: --title, --kind (default 'note'), --issue.
 func (a *App) Add(args []string) error {
@@ -29,15 +30,17 @@ func (a *App) Add(args []string) error {
 		title   string
 		kind    string
 		issue   string
+		human   bool
 		long    bool
 	)
 	fs.StringVar(&bodyArg, "body", "", "entry body, @<path> to read from a file, or - for stdin")
+	fs.BoolVar(&human, "human", false, "open $EDITOR to write the body")
 	fs.StringVar(&title, "title", "", "optional title")
 	fs.StringVar(&kind, "kind", KindNote, "entry kind (note|adr|pivot|foundation|...)")
 	fs.StringVar(&issue, "issue", "", "linked issue id (free-form)")
 	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
 	fs.Usage = func() {
-		fmt.Fprintln(a.Stderr, "usage: ant add (--body <text> | --body @<file> | --body - | stdin) [--title <s>] [--kind <k>] [--issue <id>] [--long]")
+		fmt.Fprintln(a.Stderr, "usage: ant add (--body <text> | --body @<file> | --body - | --human | stdin) [--title <s>] [--kind <k>] [--issue <id>] [--long]")
 		fmt.Fprintln(a.Stderr, "")
 		fmt.Fprintln(a.Stderr, "Heredoc example:")
 		fmt.Fprintln(a.Stderr, "  ant add --kind adr --title \"Use sqlite\" --body - <<'EOF'")
@@ -49,12 +52,21 @@ func (a *App) Add(args []string) error {
 		return err
 	}
 
-	body, err := a.resolveBody(bodyArg)
+	if human && setFlags(fs)["body"] {
+		return NewError(CodeUsage, "--human and --body are mutually exclusive")
+	}
+
+	var body string
+	if human {
+		body, err = openInEditor("")
+	} else {
+		body, err = a.resolveBody(bodyArg)
+	}
 	if err != nil {
 		return err
 	}
 	if body == "" {
-		return NewError(CodeValidationError, "body is empty (use --body, --body @file, or pipe via stdin)")
+		return NewError(CodeValidationError, "body is empty (use --body, --body @file, --human, or pipe via stdin)")
 	}
 
 	store, _, err := a.requireInitialised()

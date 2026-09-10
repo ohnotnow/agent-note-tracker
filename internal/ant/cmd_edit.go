@@ -16,6 +16,8 @@ import (
 //   --body @<p>   set body to contents of file <p>
 //   --body -      set body from stdin (explicit)
 //   (stdin)       if --body is not given and stdin has content, set body
+//   --human       open $EDITOR with the current body (ait spelling; --visual
+//                 is accepted as an alias)
 //   --title <s>   set title (empty string clears)
 //   --kind <s>    set kind (rejects empty)
 //   --issue <s>   set issue_id (empty string clears)
@@ -41,17 +43,17 @@ func (a *App) Edit(args []string) error {
 		title   string
 		kind    string
 		issue   string
-		visual  bool
+		human   bool
 		long    bool
 	)
 	fs.StringVar(&bodyArg, "body", "", "new body, @<path> to read from a file, or - for stdin")
 	fs.StringVar(&title, "title", "", "new title (empty clears)")
 	fs.StringVar(&kind, "kind", "", "new kind")
 	fs.StringVar(&issue, "issue", "", "new issue id (empty clears)")
-	fs.BoolVar(&visual, "visual", false, "open $EDITOR with the current body")
+	fs.BoolVar(&human, "human", false, "open $EDITOR with the current body")
 	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
 	fs.Usage = func() {
-		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [--body <text>|@<file>|-] [--title <s>] [--kind <k>] [--issue <id>] [--visual] [--long]")
+		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [--body <text>|@<file>|-] [--title <s>] [--kind <k>] [--issue <id>] [--human] [--long]")
 		fmt.Fprintln(a.Stderr, "")
 		fmt.Fprintln(a.Stderr, "To grow an entry rather than replace it, see 'ant append'.")
 		fmt.Fprintln(a.Stderr, "")
@@ -72,8 +74,8 @@ func (a *App) Edit(args []string) error {
 	}
 
 	set := setFlags(fs)
-	if visual && set["body"] {
-		return NewError(CodeUsage, "--visual and --body are mutually exclusive")
+	if human && set["body"] {
+		return NewError(CodeUsage, "--human and --body are mutually exclusive")
 	}
 
 	store, _, err := a.requireInitialised()
@@ -84,7 +86,7 @@ func (a *App) Edit(args []string) error {
 	var update EntryUpdate
 
 	switch {
-	case visual:
+	case human:
 		current, err := store.GetEntry(id)
 		if err != nil {
 			if errors.Is(err, ErrNotFound) {

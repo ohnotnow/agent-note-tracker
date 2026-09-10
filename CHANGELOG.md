@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+- `ant add --human` opens `$EDITOR` (falling back to `vi`) to write the body, matching `ait create --human`. The editor holds the body only; pass `--title` alongside if you want one. An empty save is rejected rather than creating an empty entry, and `--human` cannot be combined with `--body`.
+
+### Changed
+- `ant edit --visual` is now `ant edit --human`, matching the flag name on `ait update`. `--visual` is still accepted as an input-only alias (like `--type` and `--description`), so existing scripts and muscle memory keep working; help text, completion, and docs use `--human`.
+
 ## [1.7.0] - 2026-08-29
 ### Fixed
 - The self-update redirect for go-install users printed `go install github.com/ohnotnow/agent-note-tracker@latest`, a command that could never work: `go.mod` declared the bare module name `agent-note-tracker`, and Go refuses to install a module whose declared path doesn't match the path you asked for. The module is now declared under its full GitHub path and the hint points at `github.com/ohnotnow/agent-note-tracker/cmd/ant@latest`, which installs a binary actually named `ant`. Mirrors the same fix in the sibling `ait` tool (v1.15.0). `go install` works from this release's tag onwards.

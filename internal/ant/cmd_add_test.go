@@ -3,6 +3,7 @@ package ant
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -161,5 +162,46 @@ func TestAdd_UniquePublicIDs(t *testing.T) {
 			t.Fatalf("duplicate public_id %q", e.PublicID)
 		}
 		seen[e.PublicID] = true
+	}
+}
+
+func TestAdd_HumanEditor_CreatesEntryFromEditorBody(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("--human test uses a POSIX shell script as the fake editor")
+	}
+	t.Setenv("EDITOR", fakeEditorScript(t, "written in the editor"))
+
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+
+	var got Entry
+	ta.run(t, &got, "add", "--long", "--human", "--title", "From editor")
+	if got.Body != "written in the editor" {
+		t.Errorf("body = %q, want 'written in the editor'", got.Body)
+	}
+	if got.Title != "From editor" {
+		t.Errorf("title = %q, want 'From editor'", got.Title)
+	}
+}
+
+func TestAdd_HumanEditor_RejectsEmptyResult(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("--human test uses a POSIX shell script as the fake editor")
+	}
+	t.Setenv("EDITOR", fakeEditorScript(t, ""))
+
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+
+	if err := ta.Dispatch("add", []string{"--human"}); err == nil {
+		t.Error("expected error when editor produces an empty body")
+	}
+}
+
+func TestAdd_HumanAndBody_Conflict(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	if err := ta.Dispatch("add", []string{"--human", "--body", "y"}); err == nil {
+		t.Error("expected error when --human and --body are combined")
 	}
 }

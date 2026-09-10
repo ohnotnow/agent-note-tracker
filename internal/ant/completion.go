@@ -107,7 +107,7 @@ _ant() {
                             '--title[entry title]:title:' \
                             '--kind[entry kind]:kind:(note adr pivot foundation)' \
                             '--issue[linked issue id]:issue:' \
-                            '--visual[open $EDITOR with the current body]' \
+                            '--human[open $EDITOR with the current body]' \
                             '--long[return the full record]'
                     fi
                     ;;
@@ -136,7 +136,9 @@ _ant() {
                         '--body[entry body, @file, or - for stdin]:body:' \
                         '--title[entry title]:title:' \
                         '--kind[entry kind]:kind:(note adr pivot foundation)' \
-                        '--issue[linked issue id]:issue:'
+                        '--issue[linked issue id]:issue:' \
+                        '--human[open $EDITOR to write the body]' \
+                        '--long[return the full record]'
                     ;;
             esac
             ;;

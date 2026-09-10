@@ -86,6 +86,7 @@ ant init --prefix myproject               # override the inferred prefix
 ant add --body "rationale text"           # literal body
 ant add --body @path/to/file.md           # body from file
 echo "rationale" | ant add                # implicit stdin
+ant add --human --title "Why X"           # body written in $EDITOR (for a person)
 ant add --body - <<'EOF'                  # explicit stdin via heredoc
 Multi-line body. Single-quoted 'EOF' means no shell expansion —
 backticks and $vars stay literal.
@@ -136,6 +137,7 @@ ant edit <id> --title "New title"         # change one column
 ant edit <id> --issue ""                  # clear a column (empty string)
 echo "new body" | ant edit <id>           # replace body via stdin
 ant edit <id> --body @path/to/new.md      # replace body from file
+ant edit <id> --human                     # rewrite body in $EDITOR (for a person)
 ant edit <id> --body - <<'EOF'            # explicit stdin via heredoc
 Rewritten body, apostrophes and `backticks` fine.
 EOF
