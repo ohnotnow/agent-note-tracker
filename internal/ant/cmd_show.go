@@ -35,5 +35,8 @@ func (a *App) Show(args []string) error {
 		}
 		return err
 	}
+	if err := store.MarkShown(id); err != nil {
+		return err
+	}
 	return a.writeJSON(entry)
 }

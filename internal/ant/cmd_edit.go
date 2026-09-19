@@ -45,17 +45,26 @@ func (a *App) Edit(args []string) error {
 		issue   string
 		human   bool
 		long    bool
+		force   bool
+		skip    bool
 	)
 	fs.StringVar(&bodyArg, "body", "", "new body, @<path> to read from a file, or - for stdin")
+	fs.BoolVar(&force, "force", false, "allow a new body less than half the length of the existing one")
+	fs.BoolVar(&skip, strings.TrimPrefix(SkipReadCheckFlag, "--"), false, "rewrite an entry this session has not run 'show' on (only checked when CLAUDE_CODE_SESSION_ID is set)")
 	fs.StringVar(&title, "title", "", "new title (empty clears)")
 	fs.StringVar(&kind, "kind", "", "new kind")
 	fs.StringVar(&issue, "issue", "", "new issue id (empty clears)")
 	fs.BoolVar(&human, "human", false, "open $EDITOR with the current body")
 	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
 	fs.Usage = func() {
-		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [--body <text>|@<file>|-] [--title <s>] [--kind <k>] [--issue <id>] [--human] [--long]")
+		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [--body <text>|@<file>|-] [--title <s>] [--kind <k>] [--issue <id>] [--human] [--force] [--long] [--dangerously-skip-read-check]")
 		fmt.Fprintln(a.Stderr, "")
 		fmt.Fprintln(a.Stderr, "To grow an entry rather than replace it, see 'ant append'.")
+		fmt.Fprintln(a.Stderr, "")
+		fmt.Fprintln(a.Stderr, "Guards: an empty body is refused. A new body shorter than half the existing")
+		fmt.Fprintln(a.Stderr, "one is refused unless --force is given. When CLAUDE_CODE_SESSION_ID is set")
+		fmt.Fprintln(a.Stderr, "(i.e. the caller is a coding agent), --body, --title and --human are refused")
+		fmt.Fprintln(a.Stderr, "unless this session ran 'ant show <id>' within the last hour.")
 		fmt.Fprintln(a.Stderr, "")
 		fmt.Fprintln(a.Stderr, "Heredoc example:")
 		fmt.Fprintln(a.Stderr, "  ant edit demo-AbCdE --body - <<'EOF'")
@@ -83,15 +92,19 @@ func (a *App) Edit(args []string) error {
 		return err
 	}
 
+	current, err := store.GetEntry(id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return NewError(CodeNotFound, "no entry with id %q", id)
+		}
+		return err
+	}
+
 	var update EntryUpdate
 
 	switch {
 	case human:
-		current, err := store.GetEntry(id)
-		if err != nil {
-			if errors.Is(err, ErrNotFound) {
-				return NewError(CodeNotFound, "no entry with id %q", id)
-			}
+		if err := store.CheckShown(id, skip); err != nil {
 			return err
 		}
 		edited, err := openInEditor(current.Body)
@@ -110,7 +123,20 @@ func (a *App) Edit(args []string) error {
 			return berr
 		}
 		if bodyChanged {
+			if strings.TrimSpace(body) == "" {
+				return NewError(CodeValidationError, "body cannot be empty; to replace it, pass the whole new text (did a heredoc come through empty?)")
+			}
 			update.Body = &body
+		}
+	}
+	if update.Body != nil || set["title"] {
+		if err := store.CheckShown(id, skip); err != nil {
+			return err
+		}
+	}
+	if update.Body != nil {
+		if err := checkBodyShrink(id, current.Body, *update.Body, force); err != nil {
+			return err
 		}
 	}
 	if set["title"] {

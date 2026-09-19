@@ -111,3 +111,32 @@ func indexExists(t *testing.T, s *Store, name string) bool {
 	}
 	return n > 0
 }
+
+func TestMigrate_UpgradeFromV1AddsShownColumns(t *testing.T) {
+	s := openMemoryStore(t)
+	if err := s.ensureSchemaVersionTable(); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.applyMigration(1); err != nil {
+		t.Fatalf("apply v1: %v", err)
+	}
+	if _, err := s.DB.Exec(`INSERT INTO entries (public_id, kind, body, created_at, updated_at)
+		VALUES ('ant-old1', 'note', 'from v1', '2026-05-01T00:00:00Z', '2026-05-01T00:00:00Z')`); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := s.Migrate(); err != nil {
+		t.Fatalf("Migrate: %v", err)
+	}
+	v, _ := s.SchemaVersion()
+	if v != SchemaVersion {
+		t.Fatalf("schema version = %d, want %d", v, SchemaVersion)
+	}
+	var shownBy, shownAt *string
+	if err := s.DB.QueryRow(`SELECT shown_by_session, shown_at FROM entries WHERE public_id = 'ant-old1'`).Scan(&shownBy, &shownAt); err != nil {
+		t.Fatalf("select new columns: %v", err)
+	}
+	if shownBy != nil || shownAt != nil {
+		t.Errorf("expected NULL shown columns on an upgraded row, got %v %v", shownBy, shownAt)
+	}
+}

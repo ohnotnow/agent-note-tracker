@@ -108,6 +108,8 @@ _ant() {
                             '--kind[entry kind]:kind:(note adr pivot foundation)' \
                             '--issue[linked issue id]:issue:' \
                             '--human[open $EDITOR with the current body]' \
+                            '--force[allow a body under half the existing length]' \
+                            '--dangerously-skip-read-check[edit without having run show this session]' \
                             '--long[return the full record]'
                     fi
                     ;;

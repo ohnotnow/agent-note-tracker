@@ -6,7 +6,7 @@ import (
 )
 
 // SchemaVersion is the schema version this binary expects after Migrate runs.
-const SchemaVersion = 1
+const SchemaVersion = 2
 
 // migrations is a forward-only list of DDL scripts. Index i takes the database
 // from version i-1 to version i. Index 0 is an unused placeholder so that
@@ -34,6 +34,9 @@ var migrations = []string{
 		id     INTEGER PRIMARY KEY CHECK (id = 1),
 		prefix TEXT    NOT NULL
 	);`,
+	// v2: record which agent session last showed an entry (see guards.go).
+	`ALTER TABLE entries ADD COLUMN shown_by_session TEXT;
+	ALTER TABLE entries ADD COLUMN shown_at TEXT;`,
 }
 
 // Migrate brings the database to the latest schema version. Safe to call

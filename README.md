@@ -153,7 +153,7 @@ use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
 | `ant config` | Show prefix, schema version, resolved DB path |
 | `ant add` (alias: `ant create`) | Capture a new entry (body via `--body`, `--body @file`, stdin, or `--human` for $EDITOR) |
 | `ant show <id>` | Full record for one entry |
-| `ant edit <id>` | Update body / title / kind / issue (empty `--title`/`--issue` clears; `--human` opens the body in $EDITOR) |
+| `ant edit <id>` | Update body / title / kind / issue (empty `--title`/`--issue` clears; `--human` opens the body in $EDITOR; see guards below) |
 | `ant append <id>` | Add content to an existing entry, separated by a markdown `---` rule |
 | `ant delete <id>` | Remove an entry (refuses without `--force`, see below) |
 | `ant list` | List entries; `--long`, `--human`, filters: `--kind`, `--issue`, `--since` |
@@ -171,6 +171,20 @@ use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
 JSON by default, because that's what agents and pipelines want. If you're
 the one reading the output, `ant list --human` gives you a tabular view,
 `--long` includes the full bodies, and `ant export` produces markdown.
+
+## Guards against blind writes
+
+Both guards exist because an agent once wiped an entry body by piping an empty heredoc into an edit, and another sent a diff where the whole text was expected.
+
+- `ant edit --body ""` (or `--body -` with nothing on stdin, or `@file` on an empty file) is refused rather than blanking the body.
+- A new body less than half the length of the existing one is refused with a `shrink` error unless you pass `--force`. Growing a body is never questioned, and bodies under 200 characters are exempt. `ant append` is the right tool when you want to add rather than replace.
+- When `CLAUDE_CODE_SESSION_ID` is set (Claude Code sets it for every command an agent runs), `ant show` records the session and time against the entry. `ant edit --body/--title/--human` then refuses with an `unread` error unless that session ran `show` on the entry within the last hour. The error says which it was: never shown, shown by another session, or shown too long ago. A plain terminal has no session id, so humans are never checked. The override is deliberately long:
+
+```bash
+ant edit <id> --body @rewrite.md --dangerously-skip-read-check
+```
+
+The hour is a constant (`ShownWindow` in `internal/ant/guards.go`), chosen so that a session whose context has been compacted since it last looked cannot keep editing on a stale memory of the entry. `ait` has the same guards with the same flag and error codes.
 
 ## ant delete sneakyness
 

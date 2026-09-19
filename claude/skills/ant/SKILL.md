@@ -142,6 +142,10 @@ ant edit <id> --body - <<'EOF'            # explicit stdin via heredoc
 Rewritten body, apostrophes and `backticks` fine.
 EOF
 
+**Read before you write.** `ant show <id>` first, then `edit`. The tool records which session showed an entry, and `edit --body/--title/--human` is refused (`unread` error) unless you showed it within the last hour. This is the same rule as reading a file before editing it, and it exists because an agent once overwrote a hand-written entry without having looked at it. If the refusal says the show was too long ago, run `show` again and re-read it; your context may have been compacted since. `--dangerously-skip-read-check` overrides the guard and should almost never appear in your commands.
+
+Two more refusals: an empty body (including an empty heredoc on `--body -`) is rejected, and a replacement under half the length of the existing body is rejected as a likely diff or summary unless you pass `--force`. Only use `--force` when you have just read the old body and mean to replace it. To add to an entry, use `ant append`, which is never guarded.
+
 ant export <id>                           # render one entry as markdown
 ant export --kind adr                     # render every ADR as markdown
 ant export --json                         # JSON instead of markdown
