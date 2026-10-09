@@ -18,8 +18,9 @@ var exportFlagsWithValue = map[string]bool{
 // Export handles 'ant export [<id>] [filters] [--json]'.
 //
 // Two forms:
-//   ant export <id>              one entry, in markdown
-//   ant export [filters]         every matching entry, in markdown
+//
+//	ant export <id>              one entry, in markdown
+//	ant export [filters]         every matching entry, in markdown
 //
 // Filters: --kind, --issue, --since (same parsing as list).
 //

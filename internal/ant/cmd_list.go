@@ -11,11 +11,12 @@ import (
 //
 // Default output: slim JSON array.
 // Flags:
-//   --long             include the full body (returns []Entry)
-//   --human            tabular text for humans (date / kind / id / title)
-//   --kind <k>         filter by kind
-//   --issue <id>       filter by issue_id
-//   --since <date>     created_at >= date (YYYY-MM-DD or RFC3339)
+//
+//	--long             include the full body (returns []Entry)
+//	--human            tabular text for humans (date / kind / id / title)
+//	--kind <k>         filter by kind
+//	--issue <id>       filter by issue_id
+//	--since <date>     created_at >= date (YYYY-MM-DD or RFC3339)
 func (a *App) List(args []string) error {
 	args, err := canonicaliseAliases(args)
 	if err != nil {

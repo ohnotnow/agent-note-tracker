@@ -103,9 +103,9 @@ func (s *Store) InsertEntry(prefix string, e NewEntry) (Entry, error) {
 // no row matches.
 func (s *Store) GetEntry(publicID string) (Entry, error) {
 	var (
-		e        Entry
-		title    sql.NullString
-		issueID  sql.NullString
+		e       Entry
+		title   sql.NullString
+		issueID sql.NullString
 	)
 	row := s.DB.QueryRow(
 		`SELECT id, public_id, kind, title, body, issue_id, created_at, updated_at

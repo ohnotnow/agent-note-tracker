@@ -12,15 +12,16 @@ import (
 // Edit handles 'ant edit <id>'.
 //
 // Update semantics:
-//   --body <s>    set body to literal <s>
-//   --body @<p>   set body to contents of file <p>
-//   --body -      set body from stdin (explicit)
-//   (stdin)       if --body is not given and stdin has content, set body
-//   --human       open $EDITOR with the current body (ait spelling; --visual
-//                 is accepted as an alias)
-//   --title <s>   set title (empty string clears)
-//   --kind <s>    set kind (rejects empty)
-//   --issue <s>   set issue_id (empty string clears)
+//
+//	--body <s>    set body to literal <s>
+//	--body @<p>   set body to contents of file <p>
+//	--body -      set body from stdin (explicit)
+//	(stdin)       if --body is not given and stdin has content, set body
+//	--human       open $EDITOR with the current body (ait spelling; --visual
+//	              is accepted as an alias)
+//	--title <s>   set title (empty string clears)
+//	--kind <s>    set kind (rejects empty)
+//	--issue <s>   set issue_id (empty string clears)
 //
 // Flags that aren't passed leave the column unchanged. With no flags at all
 // (and no piped stdin) the call is a read-only no-op that returns the entry.
@@ -164,9 +165,9 @@ func (a *App) Edit(args []string) error {
 
 // resolveEditBody picks the new body for an edit, returning whether body
 // should be updated. Precedence:
-//   1. --body literal or --body @file
-//   2. piped stdin with non-empty content
-//   3. otherwise, leave unchanged
+//  1. --body literal or --body @file
+//  2. piped stdin with non-empty content
+//  3. otherwise, leave unchanged
 func (a *App) resolveEditBody(bodyArg string, bodyFlagSet bool) (string, bool, error) {
 	if bodyFlagSet {
 		switch {

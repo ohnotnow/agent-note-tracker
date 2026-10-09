@@ -247,4 +247,3 @@ func (a *App) requireInitialised() (*Store, string, error) {
 	}
 	return s, dbPath, nil
 }
-

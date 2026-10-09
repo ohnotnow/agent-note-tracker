@@ -440,13 +440,13 @@ func TestRunSelfUpdate_UnwriteableDir(t *testing.T) {
 
 func TestDetectPackageManager(t *testing.T) {
 	tests := []struct {
-		name      string
-		path      string
-		goos      string
-		gopath    string
-		home      string
-		wantMgr   string
-		wantAct   pmAction
+		name    string
+		path    string
+		goos    string
+		gopath  string
+		home    string
+		wantMgr string
+		wantAct pmAction
 	}{
 		{
 			name:    "homebrew on Apple silicon",
