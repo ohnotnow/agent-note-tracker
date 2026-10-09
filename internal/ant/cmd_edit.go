@@ -48,6 +48,9 @@ func (a *App) Edit(args []string) error {
 		long    bool
 		force   bool
 		skip    bool
+		sup     string
+		reason  string
+		unsup   string
 	)
 	fs.StringVar(&bodyArg, "body", "", "new body, @<path> to read from a file, or - for stdin")
 	fs.BoolVar(&force, "force", false, "allow a new body less than half the length of the existing one")
@@ -57,8 +60,11 @@ func (a *App) Edit(args []string) error {
 	fs.StringVar(&issue, "issue", "", "new issue id (empty clears)")
 	fs.BoolVar(&human, "human", false, "open $EDITOR with the current body")
 	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
+	fs.StringVar(&sup, "supersedes", "", "id of an earlier entry this one overturns; repeat with a new reason to change it")
+	fs.StringVar(&reason, "supersedes-reason", "", "what was overturned, when it was only part (needs --supersedes)")
+	fs.StringVar(&unsup, "unsupersede", "", "remove a supersedes link to this id")
 	fs.Usage = func() {
-		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [--body <text>|@<file>|-] [--title <s>] [--kind <k>] [--issue <id>] [--human] [--force] [--long] [--dangerously-skip-read-check]")
+		fmt.Fprintln(a.Stderr, "usage: ant edit <id> [--body <text>|@<file>|-] [--title <s>] [--kind <k>] [--issue <id>] [--supersedes <id> [--supersedes-reason <s>]] [--unsupersede <id>] [--human] [--force] [--long] [--dangerously-skip-read-check]")
 		fmt.Fprintln(a.Stderr, "")
 		fmt.Fprintln(a.Stderr, "To grow an entry rather than replace it, see 'ant append'.")
 		fmt.Fprintln(a.Stderr, "")
@@ -86,6 +92,12 @@ func (a *App) Edit(args []string) error {
 	set := setFlags(fs)
 	if human && set["body"] {
 		return NewError(CodeUsage, "--human and --body are mutually exclusive")
+	}
+	if reason != "" && sup == "" {
+		return NewError(CodeUsage, "--supersedes-reason needs --supersedes <id>")
+	}
+	if sup == id {
+		return NewError(CodeValidationError, "an entry cannot supersede itself")
 	}
 
 	store, _, err := a.requireInitialised()
@@ -148,6 +160,26 @@ func (a *App) Edit(args []string) error {
 	}
 	if set["issue"] {
 		update.IssueID = &issue
+	}
+	// Links don't touch the body or title, so the read check doesn't apply.
+	// Check the target first so a bad id fails before anything is written.
+	if sup != "" {
+		if _, err := store.GetEntry(sup); err != nil {
+			return supersedesError(err, sup)
+		}
+	}
+	if unsup != "" {
+		if err := store.RemoveSupersedes(id, unsup); err != nil {
+			if errors.Is(err, ErrNoLink) {
+				return NewError(CodeNotFound, "%s does not supersede %q", id, unsup)
+			}
+			return err
+		}
+	}
+	if sup != "" {
+		if err := store.SetSupersedes(id, sup, reason); err != nil {
+			return supersedesError(err, sup)
+		}
 	}
 
 	entry, err := store.UpdateEntry(id, update)
@@ -256,6 +288,10 @@ var editStringFlags = map[string]bool{
 	"title": true,
 	"kind":  true,
 	"issue": true,
+
+	"supersedes":        true,
+	"supersedes-reason": true,
+	"unsupersede":       true,
 }
 
 // extractPositional pulls at most one non-flag argument out of args and

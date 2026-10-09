@@ -107,6 +107,9 @@ _ant() {
                             '--title[entry title]:title:' \
                             '--kind[entry kind]:kind:(note adr pivot foundation)' \
                             '--issue[linked issue id]:issue:' \
+                            '--supersedes[id of an earlier entry this one overturns]:id:_ant_entry_ids' \
+                            '--supersedes-reason[what was overturned]:reason:' \
+                            '--unsupersede[remove a supersedes link]:id:_ant_entry_ids' \
                             '--human[open $EDITOR with the current body]' \
                             '--force[allow a body under half the existing length]' \
                             '--dangerously-skip-read-check[edit without having run show this session]' \
@@ -139,6 +142,8 @@ _ant() {
                         '--title[entry title]:title:' \
                         '--kind[entry kind]:kind:(note adr pivot foundation)' \
                         '--issue[linked issue id]:issue:' \
+                        '--supersedes[id of an earlier entry this one overturns]:id:_ant_entry_ids' \
+                        '--supersedes-reason[what was overturned]:reason:' \
                         '--human[open $EDITOR to write the body]' \
                         '--long[return the full record]'
                     ;;

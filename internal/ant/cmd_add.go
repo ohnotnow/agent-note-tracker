@@ -1,6 +1,7 @@
 package ant
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -32,6 +33,8 @@ func (a *App) Add(args []string) error {
 		issue   string
 		human   bool
 		long    bool
+		sup     string
+		reason  string
 	)
 	fs.StringVar(&bodyArg, "body", "", "entry body, @<path> to read from a file, or - for stdin")
 	fs.BoolVar(&human, "human", false, "open $EDITOR to write the body")
@@ -39,8 +42,10 @@ func (a *App) Add(args []string) error {
 	fs.StringVar(&kind, "kind", KindNote, "entry kind (note|adr|pivot|foundation|...)")
 	fs.StringVar(&issue, "issue", "", "linked issue id (free-form)")
 	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
+	fs.StringVar(&sup, "supersedes", "", "id of an earlier entry this one overturns, in whole or part")
+	fs.StringVar(&reason, "supersedes-reason", "", "what was overturned, when it was only part (needs --supersedes)")
 	fs.Usage = func() {
-		fmt.Fprintln(a.Stderr, "usage: ant add (--body <text> | --body @<file> | --body - | --human | stdin) [--title <s>] [--kind <k>] [--issue <id>] [--long]")
+		fmt.Fprintln(a.Stderr, "usage: ant add (--body <text> | --body @<file> | --body - | --human | stdin) [--title <s>] [--kind <k>] [--issue <id>] [--supersedes <id> [--supersedes-reason <s>]] [--long]")
 		fmt.Fprintln(a.Stderr, "")
 		fmt.Fprintln(a.Stderr, "Heredoc example:")
 		fmt.Fprintln(a.Stderr, "  ant add --kind adr --title \"Use sqlite\" --body - <<'EOF'")
@@ -54,6 +59,9 @@ func (a *App) Add(args []string) error {
 
 	if human && setFlags(fs)["body"] {
 		return NewError(CodeUsage, "--human and --body are mutually exclusive")
+	}
+	if reason != "" && sup == "" {
+		return NewError(CodeUsage, "--supersedes-reason needs --supersedes <id>")
 	}
 
 	var body string
@@ -77,6 +85,13 @@ func (a *App) Add(args []string) error {
 	if err != nil {
 		return err
 	}
+	// Check the target before inserting, so a bad id doesn't leave an
+	// entry behind without its link.
+	if sup != "" {
+		if _, err := store.GetEntry(sup); err != nil {
+			return supersedesError(err, sup)
+		}
+	}
 
 	entry, err := store.InsertEntry(prefix, NewEntry{
 		Kind:    kind,
@@ -87,10 +102,23 @@ func (a *App) Add(args []string) error {
 	if err != nil {
 		return err
 	}
+	if sup != "" {
+		if err := store.SetSupersedes(entry.PublicID, sup, reason); err != nil {
+			return supersedesError(err, sup)
+		}
+	}
 	if long {
 		return a.writeJSON(entry)
 	}
 	return a.writeJSON(entry.Slim())
+}
+
+// supersedesError turns a missing --supersedes target into a clean not_found.
+func supersedesError(err error, target string) error {
+	if errors.Is(err, ErrNotFound) {
+		return NewError(CodeNotFound, "no entry with id %q to supersede", target)
+	}
+	return err
 }
 
 // resolveBody applies the body-source precedence rules described on Add.

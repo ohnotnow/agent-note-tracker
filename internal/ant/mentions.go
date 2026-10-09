@@ -8,21 +8,29 @@ import (
 
 // EntryRef is another entry as shown alongside the one being read: its id and
 // title, so a mistyped or lookalike id stands out next to the wrong title.
+// Reason is only set on supersedes links.
 type EntryRef struct {
 	PublicID string `json:"id"`
 	Title    string `json:"title,omitempty"`
+	Reason   string `json:"reason,omitempty"`
 }
 
-// EntryShown is the 'ant show' record: the entry plus the entries its body
-// mentions and the entries whose bodies mention it. Mentions are worked out
-// from the bodies on every read, so they never go stale.
+// EntryShown is the 'ant show' record: the entry plus its supersedes links,
+// the entries its body mentions and the entries whose bodies mention it.
+// Mentions are worked out from the bodies on every read, so they never go
+// stale.
+//
+// SupersededBy comes first so a reader who stops early still sees the
+// warning. It shadows Entry.SupersededBy (ids only) with the fuller form.
 //
 // NotInNotebook lists ids with this project's prefix that match no entry.
 // They are often ait issues (projects commonly share one prefix across ait
 // and ant), possibly since closed, so they are listed without calling them
 // typos.
 type EntryShown struct {
+	SupersededBy []EntryRef `json:"superseded_by,omitempty"`
 	Entry
+	Supersedes    []EntryRef `json:"supersedes,omitempty"`
 	Mentions      []EntryRef `json:"mentions,omitempty"`
 	MentionedBy   []EntryRef `json:"mentioned_by,omitempty"`
 	NotInNotebook []string   `json:"not_in_notebook,omitempty"`
@@ -111,6 +119,10 @@ func (s *Store) ShowEntry(prefix, publicID string) (EntryShown, error) {
 	}
 
 	shown := EntryShown{Entry: entry}
+	shown.Supersedes, shown.SupersededBy, err = s.supersedeRefs(entry.id)
+	if err != nil {
+		return EntryShown{}, err
+	}
 	for _, id := range findMentions(prefix, entry.Body) {
 		if id == entry.PublicID {
 			continue

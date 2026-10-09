@@ -13,6 +13,8 @@ type Entry struct {
 	IssueID   string `json:"issue_id,omitempty"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	// SupersededBy lists the public ids of entries that supersede this one.
+	SupersededBy []string `json:"superseded_by,omitempty"`
 }
 
 // Conventional kinds documented for the Claude Code skill. The schema does
@@ -42,6 +44,9 @@ type EntrySlim struct {
 	Title     string `json:"title,omitempty"`
 	IssueID   string `json:"issue_id,omitempty"`
 	CreatedAt string `json:"created_at"`
+	// SupersededBy marks rows a reader should not trust without checking the
+	// newer entries first.
+	SupersededBy []string `json:"superseded_by,omitempty"`
 }
 
 // EntryWithSnippet adds a SnippetLen-character body snippet to an EntrySlim.
@@ -55,11 +60,12 @@ type EntryWithSnippet struct {
 // Slim returns the slim projection of an Entry.
 func (e Entry) Slim() EntrySlim {
 	return EntrySlim{
-		PublicID:  e.PublicID,
-		Kind:      e.Kind,
-		Title:     e.Title,
-		IssueID:   e.IssueID,
-		CreatedAt: e.CreatedAt,
+		PublicID:     e.PublicID,
+		Kind:         e.Kind,
+		Title:        e.Title,
+		IssueID:      e.IssueID,
+		CreatedAt:    e.CreatedAt,
+		SupersededBy: e.SupersededBy,
 	}
 }
 

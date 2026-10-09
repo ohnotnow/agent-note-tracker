@@ -6,7 +6,7 @@ import (
 )
 
 // SchemaVersion is the schema version this binary expects after Migrate runs.
-const SchemaVersion = 2
+const SchemaVersion = 3
 
 // migrations is a forward-only list of DDL scripts. Index i takes the database
 // from version i-1 to version i. Index 0 is an unused placeholder so that
@@ -37,6 +37,18 @@ var migrations = []string{
 	// v2: record which agent session last showed an entry (see guards.go).
 	`ALTER TABLE entries ADD COLUMN shown_by_session TEXT;
 	ALTER TABLE entries ADD COLUMN shown_at TEXT;`,
+	// v3: declared links between entries (see links.go). Only 'supersedes'
+	// exists today; kind leaves room for others without a table rebuild.
+	// Foreign keys are not switched on, so DeleteEntry removes links itself.
+	`CREATE TABLE links (
+		from_entry  INTEGER NOT NULL REFERENCES entries(id),
+		to_entry    INTEGER NOT NULL REFERENCES entries(id),
+		kind        TEXT    NOT NULL,
+		reason      TEXT,
+		created_at  TEXT    NOT NULL,
+		PRIMARY KEY (from_entry, to_entry, kind)
+	);
+	CREATE INDEX idx_links_to_entry ON links(to_entry);`,
 }
 
 // Migrate brings the database to the latest schema version. Safe to call

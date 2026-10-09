@@ -124,7 +124,11 @@ func (s *Store) GetEntry(publicID string) (Entry, error) {
 	if issueID.Valid {
 		e.IssueID = issueID.String
 	}
-	return e, nil
+	one := []Entry{e}
+	if err := s.attachSupersededBy(one); err != nil {
+		return Entry{}, err
+	}
+	return one[0], nil
 }
 
 func sqlNullable(s string) any {
@@ -134,10 +138,25 @@ func sqlNullable(s string) any {
 	return s
 }
 
-// DeleteEntry removes the row with the given public_id. Returns ErrNotFound
-// if no row matches.
+// DeleteEntry removes the row with the given public_id, and any links to or
+// from it (foreign keys are off, so nothing cascades). Returns ErrNotFound if
+// no row matches.
 func (s *Store) DeleteEntry(publicID string) error {
-	res, err := s.DB.Exec(`DELETE FROM entries WHERE public_id = ?`, publicID)
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.Exec(
+		`DELETE FROM links
+		 WHERE from_entry = (SELECT id FROM entries WHERE public_id = ?)
+		    OR to_entry   = (SELECT id FROM entries WHERE public_id = ?)`,
+		publicID, publicID,
+	); err != nil {
+		return fmt.Errorf("delete links: %w", err)
+	}
+	res, err := tx.Exec(`DELETE FROM entries WHERE public_id = ?`, publicID)
 	if err != nil {
 		return err
 	}
@@ -148,7 +167,7 @@ func (s *Store) DeleteEntry(publicID string) error {
 	if n == 0 {
 		return ErrNotFound
 	}
-	return nil
+	return tx.Commit()
 }
 
 // EntryUpdate carries optional column changes for UpdateEntry. A non-nil
@@ -295,7 +314,14 @@ func (s *Store) ListEntries(f ListFilter) ([]Entry, error) {
 		}
 		out = append(out, e)
 	}
-	return out, rows.Err()
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	rows.Close()
+	if err := s.attachSupersededBy(out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func lower(s string) string {

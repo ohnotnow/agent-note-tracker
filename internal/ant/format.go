@@ -29,6 +29,9 @@ func renderOne(sb *strings.Builder, e Entry) {
 		fmt.Fprintf(sb, "issue_id: %s\n", e.IssueID)
 	}
 	fmt.Fprintf(sb, "created_at: %s\n", e.CreatedAt)
+	if len(e.SupersededBy) > 0 {
+		fmt.Fprintf(sb, "superseded_by: %s\n", strings.Join(e.SupersededBy, ", "))
+	}
 	sb.WriteString("---\n\n")
 
 	heading := e.Title

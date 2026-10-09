@@ -3,6 +3,7 @@ package ant
 import (
 	"flag"
 	"fmt"
+	"strings"
 	"text/tabwriter"
 	"time"
 )
@@ -93,6 +94,9 @@ func (a *App) writeHumanTable(entries []Entry) error {
 		title := e.Title
 		if title == "" {
 			title = "—"
+		}
+		if len(e.SupersededBy) > 0 {
+			title += " (superseded by " + strings.Join(e.SupersededBy, ", ") + ")"
 		}
 		if _, err := fmt.Fprintf(w, "%s\t%s\t%s\t%s\n",
 			shortDate(e.CreatedAt), e.Kind, e.PublicID, title); err != nil {
