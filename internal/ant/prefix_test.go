@@ -150,3 +150,26 @@ func TestInit_RekeyChangesEntryIDs(t *testing.T) {
 		t.Errorf("public_id after rekey = %q, want beta- prefix", pubID)
 	}
 }
+
+func TestInit_RekeyRewritesMentionsInBodies(t *testing.T) {
+	ta := newTestApp(t)
+	ta.run(t, nil, "init", "--prefix", "alpha")
+	cited := addAndID(t, ta, "--title", "Cited entry")
+	citing := addAndID(t, ta, "--body",
+		"Builds on "+cited+". Issue alpha-ZZZZZ and child "+cited+".2 are not entries here.")
+
+	ta.run(t, nil, "init", "--prefix", "beta")
+
+	newCited := "beta-" + strings.TrimPrefix(cited, "alpha-")
+	newCiting := "beta-" + strings.TrimPrefix(citing, "alpha-")
+	var got EntryShown
+	ta.run(t, &got, "show", newCiting)
+
+	want := "Builds on " + newCited + ". Issue alpha-ZZZZZ and child " + cited + ".2 are not entries here."
+	if got.Body != want {
+		t.Errorf("body after rekey:\n got %q\nwant %q", got.Body, want)
+	}
+	if len(got.Mentions) != 1 || got.Mentions[0].PublicID != newCited {
+		t.Errorf("mentions after rekey = %+v, want [%s]", got.Mentions, newCited)
+	}
+}

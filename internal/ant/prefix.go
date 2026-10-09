@@ -38,13 +38,22 @@ func (s *Store) SetPrefix(prefix string) error {
 
 // Rekey atomically updates the project prefix and rewrites every entry's
 // public_id using the new prefix. The integer primary keys are untouched, so
-// the sqid suffix on each entry stays the same — only the prefix changes.
+// the sqid suffix on each entry stays the same; only the prefix changes.
+// Ids of this notebook's entries cited in bodies are rewritten too, so
+// mentions survive; other ids with the old prefix (ait issues sharing it, say)
+// are left alone.
 func (s *Store) Rekey(newPrefix string) error {
 	tx, err := s.DB.Begin()
 	if err != nil {
 		return err
 	}
 	defer func() { _ = tx.Rollback() }()
+
+	var oldPrefix string
+	err = tx.QueryRow(`SELECT prefix FROM project_config WHERE id = 1`).Scan(&oldPrefix)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return fmt.Errorf("read prefix: %w", err)
+	}
 
 	if _, err := tx.Exec(
 		`INSERT INTO project_config (id, prefix) VALUES (1, ?)
@@ -54,18 +63,23 @@ func (s *Store) Rekey(newPrefix string) error {
 		return fmt.Errorf("update prefix: %w", err)
 	}
 
-	rows, err := tx.Query(`SELECT id FROM entries`)
-	if err != nil {
-		return fmt.Errorf("load entry ids: %w", err)
+	type row struct {
+		id       int64
+		publicID string
+		body     string
 	}
-	var ids []int64
+	rows, err := tx.Query(`SELECT id, public_id, body FROM entries`)
+	if err != nil {
+		return fmt.Errorf("load entries: %w", err)
+	}
+	var entries []row
 	for rows.Next() {
-		var id int64
-		if err := rows.Scan(&id); err != nil {
+		var r row
+		if err := rows.Scan(&r.id, &r.publicID, &r.body); err != nil {
 			rows.Close()
 			return err
 		}
-		ids = append(ids, id)
+		entries = append(entries, r)
 	}
 	if err := rows.Err(); err != nil {
 		rows.Close()
@@ -73,19 +87,28 @@ func (s *Store) Rekey(newPrefix string) error {
 	}
 	rows.Close()
 
-	upd, err := tx.Prepare(`UPDATE entries SET public_id = ? WHERE id = ?`)
+	renames := make(map[string]string, len(entries))
+	for _, r := range entries {
+		newPublicID, err := PublicID(newPrefix, r.id)
+		if err != nil {
+			return err
+		}
+		renames[r.publicID] = newPublicID
+	}
+
+	upd, err := tx.Prepare(`UPDATE entries SET public_id = ?, body = ? WHERE id = ?`)
 	if err != nil {
 		return err
 	}
 	defer upd.Close()
 
-	for _, id := range ids {
-		newPublicID, err := PublicID(newPrefix, id)
-		if err != nil {
-			return err
+	for _, r := range entries {
+		body := r.body
+		if oldPrefix != "" {
+			body = rewriteMentions(oldPrefix, body, renames)
 		}
-		if _, err := upd.Exec(newPublicID, id); err != nil {
-			return fmt.Errorf("rekey id %d: %w", id, err)
+		if _, err := upd.Exec(renames[r.publicID], body, r.id); err != nil {
+			return fmt.Errorf("rekey id %d: %w", r.id, err)
 		}
 	}
 	return tx.Commit()

@@ -3,6 +3,7 @@ package ant
 import (
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // EntryRef is another entry as shown alongside the one being read: its id and
@@ -28,15 +29,47 @@ type EntryShown struct {
 }
 
 // findMentions returns the distinct ids with the given prefix in body, in
-// order of first appearance. An id must stand alone as a token, and one
-// followed by a dotted number (an ait child issue such as x-AbCdE.3) is
-// skipped.
+// order of first appearance.
 func findMentions(prefix, body string) []string {
-	re := regexp.MustCompile(regexp.QuoteMeta(prefix) + `-[` + idAlphabet + `]{` + strconv.Itoa(idMinLength) + `,}(\.[0-9]+)*`)
 	var (
 		out  []string
 		seen = map[string]bool{}
 	)
+	for _, span := range mentionSpans(prefix, body) {
+		id := body[span[0]:span[1]]
+		if !seen[id] {
+			seen[id] = true
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+// rewriteMentions replaces each id with the given prefix in body that has an
+// entry in renames. Ids missing from renames (ait issues sharing the prefix,
+// say) are left alone.
+func rewriteMentions(prefix, body string, renames map[string]string) string {
+	var (
+		b    strings.Builder
+		last int
+	)
+	for _, span := range mentionSpans(prefix, body) {
+		if to, ok := renames[body[span[0]:span[1]]]; ok {
+			b.WriteString(body[last:span[0]])
+			b.WriteString(to)
+			last = span[1]
+		}
+	}
+	b.WriteString(body[last:])
+	return b.String()
+}
+
+// mentionSpans returns the [start, end) byte offsets of each id with the
+// given prefix in body. An id must stand alone as a token, and one followed by
+// a dotted number (an ait child issue such as x-AbCdE.3) is skipped.
+func mentionSpans(prefix, body string) [][2]int {
+	re := regexp.MustCompile(regexp.QuoteMeta(prefix) + `-[` + idAlphabet + `]{` + strconv.Itoa(idMinLength) + `,}(\.[0-9]+)*`)
+	var out [][2]int
 	for _, m := range re.FindAllStringSubmatchIndex(body, -1) {
 		start, end := m[0], m[1]
 		if m[2] >= 0 {
@@ -48,11 +81,7 @@ func findMentions(prefix, body string) []string {
 		if end < len(body) && isTokenByte(body[end]) {
 			continue
 		}
-		id := body[start:end]
-		if !seen[id] {
-			seen[id] = true
-			out = append(out, id)
-		}
+		out = append(out, [2]int{start, end})
 	}
 	return out
 }
