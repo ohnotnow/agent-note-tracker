@@ -145,15 +145,40 @@ history of how the vision evolved, render it to markdown periodically
 use ait ids if you're using ait, or Jira / Linear / GitHub ids otherwise.
 `ant for <id>` returns entries with an exact match — nothing fancier.
 
+## Linking entries to each other
+
+Two kinds of connection, both shown by `ant show`:
+
+- **Mentions** are worked out from the bodies on every read. Cite an
+  entry's id in a body and `show` lists it under `mentions` (with its
+  title, so a mistyped id stands out), and the cited entry lists the
+  citing one under `mentioned_by`. Ids with the project prefix that match
+  no entry appear under `not_in_notebook`; they are often ait issues,
+  since projects tend to share one prefix. Nothing is stored, so they
+  can't go stale, and `ant init --prefix` rewrites cited ids along with
+  the entries themselves.
+- **Supersedes** is declared by the writer when a newer entry overturns
+  all or part of an older one:
+
+  ```bash
+  ant add --supersedes ant-Ed6UZ --supersedes-reason "only the grouping rule" --body @new.md
+  ant edit ant-mjBCN --supersedes ant-Ed6UZ     # add one later (no prior show needed)
+  ant edit ant-mjBCN --unsupersede ant-Ed6UZ    # remove a wrong one
+  ```
+
+  The older entry's `show` output then leads with `superseded_by`, and its
+  rows in `list`, `recent`, `search` and `for` carry a `superseded_by`
+  marker, so a reader knows to check the newer entry before trusting it.
+
 ## Command reference
 
 | Command | Purpose |
 | --- | --- |
 | `ant init [--prefix p]` | Create `.ant/`, run migrations, set the prefix, add gitignore entry |
 | `ant config` | Show prefix, schema version, resolved DB path |
-| `ant add` (alias: `ant create`) | Capture a new entry (body via `--body`, `--body @file`, stdin, or `--human` for $EDITOR) |
-| `ant show <id>` | Full record for one entry |
-| `ant edit <id>` | Update body / title / kind / issue (empty `--title`/`--issue` clears; `--human` opens the body in $EDITOR; see guards below) |
+| `ant add` (alias: `ant create`) | Capture a new entry (body via `--body`, `--body @file`, stdin, or `--human` for $EDITOR); `--supersedes <id>` marks an older entry as overturned |
+| `ant show <id>` | Full record for one entry, plus `superseded_by` / `supersedes` and mentions (see above) |
+| `ant edit <id>` | Update body / title / kind / issue (empty `--title`/`--issue` clears; `--human` opens the body in $EDITOR; `--supersedes`/`--unsupersede` manage links; see guards below) |
 | `ant append <id>` | Add content to an existing entry, separated by a markdown `---` rule |
 | `ant delete <id>` | Remove an entry (refuses without `--force`, see below) |
 | `ant list` | List entries; `--long`, `--human`, filters: `--kind`, `--issue`, `--since` |

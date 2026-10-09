@@ -104,6 +104,29 @@ single-quoted heredoc (`<<'EOF' ... EOF`). The single-quoted delimiter
 disables shell expansion, so backticks, `$variables`, and apostrophes
 all survive untouched.
 
+### When a new entry overturns an older one
+
+If what you are writing replaces any part of an earlier entry, say so
+with `--supersedes`. Readers of the older entry then see a warning
+before they act on it. Nobody goes back and edits old entries, so this
+is the only way they find out.
+
+```bash
+ant add --kind adr --title "Grouping, second wave" \
+        --supersedes x-Ed6UZ --supersedes-reason "a story is no longer one folder" \
+        --body @path/to/notes.md
+```
+
+- Use it whenever any part of the older decision no longer holds, even a
+  small part. When it is only part, the reason says which part; leave the
+  reason out only when the whole entry is replaced.
+- Building on an entry without overturning anything is not superseding.
+  Cite it in the body instead ("builds on x-AbCdE, which chose...");
+  `show` picks that up as a mention.
+- Forgot, or found out later? `ant edit <newer-id> --supersedes <older-id>`
+  adds it after the fact, and `--unsupersede <older-id>` removes a wrong
+  one. Neither needs a prior `show`, because the body is untouched.
+
 ## Recall — the four read-side moments
 
 These are when ant earns its keep. Each returns slim JSON by default; reach
@@ -130,6 +153,13 @@ ant list --kind adr --since 2026-04-01    # filtered
 ant show <id>                             # one entry, full record
 ```
 
+**Superseded entries.** If `show` starts with `superseded_by`, or a row
+from `list`, `recent`, `search` or `for` carries a `superseded_by`
+marker, a newer entry has overturned at least part of this one. Read the
+newer entry (and its `reason`, which says which part) before you act on
+the older one. A marker on a row is also a good reason to skip straight
+to the newer entry. `show` lists the other direction as `supersedes`.
+
 `show` also lists the entries connected to this one by id, worked out
 from the bodies on every read:
 
@@ -143,9 +173,9 @@ from the bodies on every read:
   Often an ait issue (projects usually share one prefix), sometimes a
   typo; the surrounding sentence usually tells you which.
 
-To connect entries, cite the id in the body with a sentence saying why
-("builds on x-AbCdE, which chose…"). The reason is what makes the link
-worth following.
+When asked to read one entry cold ("read ant note x-AbCdE"), look at
+`superseded_by` and `mentioned_by` too: the conclusion is in this entry,
+but how it was later revised is in those.
 
 ## Editing and promotion
 
@@ -158,11 +188,13 @@ ant edit <id> --human                     # rewrite body in $EDITOR (for a perso
 ant edit <id> --body - <<'EOF'            # explicit stdin via heredoc
 Rewritten body, apostrophes and `backticks` fine.
 EOF
+```
 
 **Read before you write.** `ant show <id>` first, then `edit`. The tool records which session showed an entry, and `edit --body/--title/--human` is refused (`unread` error) unless you showed it within the last hour. This is the same rule as reading a file before editing it, and it exists because an agent once overwrote a hand-written entry without having looked at it. If the refusal says the show was too long ago, run `show` again and re-read it; your context may have been compacted since. `--dangerously-skip-read-check` overrides the guard and should almost never appear in your commands.
 
 Two more refusals: an empty body (including an empty heredoc on `--body -`) is rejected, and a replacement under half the length of the existing body is rejected as a likely diff or summary unless you pass `--force`. Only use `--force` when you have just read the old body and mean to replace it. To add to an entry, use `ant append`, which is never guarded.
 
+```bash
 ant export <id>                           # render one entry as markdown
 ant export --kind adr                     # render every ADR as markdown
 ant export --json                         # JSON instead of markdown
@@ -216,7 +248,7 @@ Default output is JSON. Pipe to `jq` for ad-hoc shaping, or use
   breaking consumers, so check `.entries` rather than treating the top
   level as the array itself.
 - **Mutations are slim by default.** `add`, `edit`, `append`, and
-  `delete` echo back `{id, kind, title?, issue_id?, created_at}` — no
+  `delete` echo back `{id, kind, title?, issue_id?, created_at, superseded_by?}` — no
   body, no `updated_at`. Pass `--long` to get the full record back when
   you actually need it (e.g. confirming a body change took effect).
 - **Errors** go to stderr as `{"error": {"code": "...", "message":
