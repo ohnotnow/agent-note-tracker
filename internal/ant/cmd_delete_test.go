@@ -44,6 +44,19 @@ func TestDelete_WithForce_RemovesRowAndEchoesIt(t *testing.T) {
 	}
 }
 
+func TestDelete_NewestEntry_IdIsNotReused(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	addAndID(t, ta, "--title", "Keeper")
+	deleted := addAndID(t, ta, "--title", "Newest, then deleted")
+	ta.run(t, nil, "delete", "--force", deleted)
+
+	next := addAndID(t, ta, "--title", "Added after the delete")
+	if next == deleted {
+		t.Errorf("new entry reused deleted id %q; old references to it would now point here", deleted)
+	}
+}
+
 func TestDelete_MissingID(t *testing.T) {
 	ta := newTestApp(t)
 	initDemo(t, ta, "demo")

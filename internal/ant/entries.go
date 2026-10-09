@@ -54,8 +54,18 @@ func (s *Store) InsertEntry(prefix string, e NewEntry) (Entry, error) {
 		}
 	}
 
+	// Take the next id from sqlite_sequence rather than MAX(id), so deleting
+	// the newest entry never lets its id (and public_id) be handed out again;
+	// bodies refer to entries by public_id. SQLite still advances the sequence
+	// when we insert with an explicit id. MAX(id) is a fallback for a notebook
+	// whose sequence row has gone missing (rebuilt or edited outside ant).
 	var nextID int64
-	if err := tx.QueryRow(`SELECT COALESCE(MAX(id), 0) + 1 FROM entries`).Scan(&nextID); err != nil {
+	if err := tx.QueryRow(
+		`SELECT MAX(
+			COALESCE((SELECT seq FROM sqlite_sequence WHERE name = 'entries'), 0),
+			COALESCE((SELECT MAX(id) FROM entries), 0)
+		) + 1`,
+	).Scan(&nextID); err != nil {
 		return Entry{}, fmt.Errorf("compute next id: %w", err)
 	}
 

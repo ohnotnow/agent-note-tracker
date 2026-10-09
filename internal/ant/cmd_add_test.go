@@ -205,3 +205,21 @@ func TestAdd_HumanAndBody_Conflict(t *testing.T) {
 		t.Error("expected error when --human and --body are combined")
 	}
 }
+
+func TestAdd_MissingSequenceRow_FallsBackToMaxID(t *testing.T) {
+	ta := newTestApp(t)
+	initDemo(t, ta, "demo")
+	first := addAndID(t, ta, "--title", "Existing entry")
+
+	// A notebook rebuilt or hand-edited outside ant may lack its
+	// sqlite_sequence row; the next id must still clear the existing rows.
+	store, _ := ta.Store()
+	if _, err := store.DB.Exec(`DELETE FROM sqlite_sequence WHERE name = 'entries'`); err != nil {
+		t.Fatalf("clear sequence: %v", err)
+	}
+
+	next := addAndID(t, ta, "--title", "Added after the sequence went missing")
+	if next == first {
+		t.Errorf("new entry reused existing id %q", first)
+	}
+}
