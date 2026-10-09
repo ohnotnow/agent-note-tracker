@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-10-09
+### Added
+- `ant show` now lists the entries connected to this one by id, worked out from the bodies on every read, so nothing is stored and nothing goes stale. `mentions` are the entries this body cites and `mentioned_by` are the entries whose bodies cite this one, each with its title so a mistyped or lookalike id stands out next to a title that doesn't fit. `not_in_notebook` lists ids with the project prefix that match no entry; these are often `ait` issues, since projects tend to share one prefix, so they are listed neutrally rather than as typos. Only standalone ids with the project's own prefix count, and dotted `ait` child ids (`x-AbCdE.3`) are ignored. Each key is omitted when empty.
+- An entry can declare that it supersedes an older one: `ant add --supersedes <id> [--supersedes-reason "<which part>"]`, or later with `ant edit <id> --supersedes <id>`; `--unsupersede <id>` removes a wrong link. The older entry's `show` output then leads with `superseded_by` (id, title, reason), so a reader who stops early still sees it, and its rows in `list`, `recent`, `search`, `for` and `foundation` carry a `superseded_by` marker. `list --human` shows "(superseded by …)" after the title and `export` adds it to the frontmatter. Changing links on `edit` doesn't need a prior `show`, since the body is untouched. The target must exist and is checked before anything is written. Schema migration v3 adds a `links` table; deleting an entry removes its links.
+
+### Fixed
+- Deleting the newest entry let the next `ant add` reuse its id, so any body citing the deleted entry silently pointed at the new one. Ids are now never reused. Existing notebooks pick this up with no migration.
+- Changing the prefix with `ant init --prefix` rewrote every entry's id but left ids cited in bodies on the old prefix. Cited ids belonging to the notebook's own entries are now rewritten in the same transaction; other ids sharing the old prefix, such as `ait` issues, are left alone.
+
 ## [1.8.0 - 1.9.0] - 2026-09-19
 ### Added
 - Guards against blind writes, mirrored in `ait` (same flags, same error codes). `ant edit` refuses an empty body outright (an empty heredoc on `--body -` used to reach the store and fail as an `internal_error`; it is now a `validation_error` before anything is touched). A replacement body under half the length of the existing one is refused with a new `shrink` error unless `--force` is passed, on the theory that a diff or a summary was sent where the whole text was expected; growing a body is never questioned and bodies under 200 characters are exempt. And when `CLAUDE_CODE_SESSION_ID` is set (Claude Code sets it for every command an agent runs), `ant show` now records the session and time against the entry, and `ant edit --body/--title/--human` refuses with a new `unread` error unless that same session showed the entry within the last hour. Runs with no session id, i.e. a person in a terminal, are never checked. The override flag is deliberately long: `--dangerously-skip-read-check`. Schema migration v2 adds the two `shown_*` columns. This came out of a session where an agent overwrote a hand-written entry it had never read; the hour-long window exists because context compaction keeps the session id but not the memory of what was read.
@@ -93,6 +102,7 @@ First stable release. No code changes from `v0.3.0` — this tag marks the publi
 
 ## [0.1.0] - 2026-05-01
 
+[1.10.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.9.0...v1.10.0
 [1.7.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.4.2...v1.5.0
