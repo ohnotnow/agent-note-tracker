@@ -130,6 +130,23 @@ ant list --kind adr --since 2026-04-01    # filtered
 ant show <id>                             # one entry, full record
 ```
 
+`show` also lists the entries connected to this one by id, worked out
+from the bodies on every read:
+
+- `mentions`: entries this body cites, each with its title. If a title
+  doesn't fit the sentence that cites it, the id in the body is probably
+  mistyped.
+- `mentioned_by`: entries whose bodies cite this one. Newer entries that
+  build on or revise this one show up here, so check them before acting
+  on an older decision.
+- `not_in_notebook`: ids with this project's prefix that match no entry.
+  Often an ait issue (projects usually share one prefix), sometimes a
+  typo; the surrounding sentence usually tells you which.
+
+To connect entries, cite the id in the body with a sentence saying why
+("builds on x-AbCdE, which chose…"). The reason is what makes the link
+worth following.
+
 ## Editing and promotion
 
 ```bash

@@ -27,8 +27,12 @@ func (a *App) Show(args []string) error {
 	if err != nil {
 		return err
 	}
+	prefix, _, err := store.GetPrefix()
+	if err != nil {
+		return err
+	}
 
-	entry, err := store.GetEntry(id)
+	entry, err := store.ShowEntry(prefix, id)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {
 			return NewError(CodeNotFound, "no entry with id %q", id)
