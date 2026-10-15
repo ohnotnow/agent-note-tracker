@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-10-15
+### Added
+- A `handover` kind for "where a session got to and what's next", with two commands. `ant handover` prints the newest handover in full, in the same shape as `ant show`, and marks it read so the session can `append` to it. It picks the most recently created handover rather than following supersedes links, so a chain linked wrongly by hand can't hide the current note. `ant handover create` takes the same flags as `ant add`, sets the kind to `handover` and supersedes the previous handover automatically; it refuses `--kind` and `--supersedes`, since either would break the chain. Shell completion knows the new command and kind. The skill now reads `ant handover` at session start and steers standing rules into the project's `CLAUDE.md` instead of the handover, where they would otherwise pile up across a stack of superseded notes.
+
 ## [1.10.0] - 2026-10-09
 ### Added
 - `ant show` now lists the entries connected to this one by id, worked out from the bodies on every read, so nothing is stored and nothing goes stale. `mentions` are the entries this body cites and `mentioned_by` are the entries whose bodies cite this one, each with its title so a mistyped or lookalike id stands out next to a title that doesn't fit. `not_in_notebook` lists ids with the project prefix that match no entry; these are often `ait` issues, since projects tend to share one prefix, so they are listed neutrally rather than as typos. Only standalone ids with the project's own prefix count, and dotted `ait` child ids (`x-AbCdE.3`) are ignored. Each key is omitted when empty.
@@ -102,6 +106,7 @@ First stable release. No code changes from `v0.3.0` — this tag marks the publi
 
 ## [0.1.0] - 2026-05-01
 
+[1.11.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.9.0...v1.10.0
 [1.7.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.5.0...v1.6.0

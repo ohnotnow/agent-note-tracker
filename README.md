@@ -96,7 +96,7 @@ a PR description, a docs file, a gist.
 
 ## Conventional kinds
 
-There are four named kinds to start with. The schema doesn't enforce
+There are five named kinds to start with. The schema doesn't enforce
 them, so feel free to invent your own as a project grows:
 
 | Kind | When to use |
@@ -105,6 +105,7 @@ them, so feel free to invent your own as a project grows:
 | `adr` | Architecture Decision Records — load-bearing choices worth writing down properly. |
 | `pivot` | Changes of direction: "we tried X, here's why we moved on". |
 | `foundation` | The single core vision document for the project. Singleton — one per project. |
+| `handover` | Where a session got to and what's next. See [Handovers](#handovers). |
 
 If a `note` turns out to matter more than you thought, promote it later
 with `ant edit --kind adr <id>`.
@@ -138,6 +139,26 @@ been recorded, it exits non-zero with a hint.
 The DB is gitignored, so foundation revisions are lossy. If you want a
 history of how the vision evolved, render it to markdown periodically
 (`ant export <id>`) and commit that file alongside the code.
+
+## Handovers
+
+A `handover` entry says where a session got to and what the next one
+should pick up. Two commands look after them:
+
+```sh
+$ ant handover create --title "Day 6" --body @handover.md
+$ ant handover
+```
+
+`ant handover create` takes the same flags as `ant add`, sets the kind
+to `handover`, and marks the previous handover as superseded by the new
+one. It refuses `--kind` and `--supersedes`, since either would break
+the chain. `ant handover` prints the newest handover in full, in the
+same shape as `ant show`. "Newest" means most recently created, so a
+handover added by hand with `ant add --kind handover` still counts.
+
+Keep standing rules out of handovers and put them in the project's
+`CLAUDE.md`, where they are edited in place and travel with the code.
 
 ## Linking to issue trackers
 
@@ -186,6 +207,7 @@ Two kinds of connection, both shown by `ant show`:
 | `ant search <query>` | Case-insensitive AND-of-terms across title + body |
 | `ant for <issue-id>` | Entries linked to a specific issue id (exact match) |
 | `ant foundation` | Print the project's foundation entry, if one has been recorded |
+| `ant handover` | Print the newest handover in full; `ant handover create` writes the next one and supersedes the last |
 | `ant export [<id>]` | Render entries as markdown; `--json` for JSON |
 | `ant version` | Print the build version (and check GitHub for newer releases) |
 | `ant self-update` | Update to the latest release; `--check` reports without installing, `--yes` skips the prompt |

@@ -31,6 +31,10 @@ flow there. If they'd rather not — or the project is brand new and
 hasn't had its ideation discussion yet — drop it and carry on. Most
 projects won't have a foundation and that's fine.
 
+Then run `ant handover`. It returns the newest handover note in full:
+where the last session got to and what's next. If it reports none,
+carry on.
+
 After a project ideation/vision discussion that produced a shared sense
 of what the project is and isn't, offer to capture it as the foundation
 entry: `ant add --kind foundation --body @path/to/notes.md`. There can
@@ -73,6 +77,9 @@ with three named conventions keeps the notebook navigable:
   project, enforced). What this project is and isn't, in the spirit of
   a design doc agreed before code was written. Read it at session
   start; capture one only after a clear ideation/vision discussion.
+- **`handover`** - Where a session got to and what the next one should
+  pick up. Written with `ant handover create`, read with `ant handover`.
+  See below.
 
 Promote a `note` to an `adr` later (`ant edit --kind adr <id>`) if it turns
 out to matter.
@@ -127,6 +134,26 @@ ant add --kind adr --title "Grouping, second wave" \
   adds it after the fact, and `--unsupersede <older-id>` removes a wrong
   one. Neither needs a prior `show`, because the body is untouched.
 
+### Handing over to the next session
+
+When the user asks for a handover, or a session is ending with work in
+flight, write one with `ant handover create`. It takes the same flags as
+`ant add`, sets the kind to `handover`, and supersedes the previous
+handover for you. Don't pass `--kind` or `--supersedes`; it refuses them.
+
+```bash
+ant handover create --title "Day 6: start screen done" --body @handover.md
+ant handover                              # the newest one, in full
+```
+
+A handover is "where we are and what's next", and nothing else. If you
+find yourself writing a standing rule ("from now on, always...", "X is
+signed off, don't touch it"), it belongs in the project's `CLAUDE.md`,
+not the handover. Rules in handovers pile up: each new note says "the
+rest of the last one still holds", and the next session has to read the
+whole stack in order to find out what the rules are. Suggest the
+`CLAUDE.md` change to the user rather than burying it in the note.
+
 ## Recall — the four read-side moments
 
 These are when ant earns its keep. Each returns slim JSON by default; reach
@@ -135,6 +162,7 @@ for `ant show <id>` when you need the full body.
 | Moment | Command |
 | --- | --- |
 | **Session start** — "what does this project care about?" | `ant foundation` |
+| **Session start** - "where did the last session get to?" | `ant handover` |
 | **Session start** — "what did we decide recently?" | `ant recent --limit 5` |
 | **Touching an area** — "any prior decisions here?" | `ant search "auth"` |
 | **Evaluating a library** — "have we looked at this before?" | `ant search "spatie"` |

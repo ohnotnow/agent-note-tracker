@@ -39,7 +39,7 @@ func (a *App) Add(args []string) error {
 	fs.StringVar(&bodyArg, "body", "", "entry body, @<path> to read from a file, or - for stdin")
 	fs.BoolVar(&human, "human", false, "open $EDITOR to write the body")
 	fs.StringVar(&title, "title", "", "optional title")
-	fs.StringVar(&kind, "kind", KindNote, "entry kind (note|adr|pivot|foundation|...)")
+	fs.StringVar(&kind, "kind", KindNote, "entry kind (note|adr|pivot|foundation|handover|...)")
 	fs.StringVar(&issue, "issue", "", "linked issue id (free-form)")
 	fs.BoolVar(&long, "long", false, "return the full record (default is slim)")
 	fs.StringVar(&sup, "supersedes", "", "id of an earlier entry this one overturns, in whole or part")

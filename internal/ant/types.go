@@ -23,11 +23,15 @@ type Entry struct {
 // KindFoundation is special: it's a singleton (one per project) enforced in
 // InsertEntry. The intent is a single load-bearing "what this project is"
 // entry that an agent reads at session start to anchor judgement calls.
+//
+// KindHandover is "where we are and what's next" between sessions. 'ant
+// handover' reads the newest one and 'ant handover create' supersedes it.
 const (
 	KindNote       = "note"
 	KindADR        = "adr"
 	KindPivot      = "pivot"
 	KindFoundation = "foundation"
+	KindHandover   = "handover"
 )
 
 // SnippetLen is the body-snippet length used by 'recent' and 'search'. The

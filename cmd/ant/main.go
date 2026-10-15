@@ -30,6 +30,7 @@ Commands:
   search      Search entries by query
   for         Show entries linked to an issue id
   foundation  Show the project's foundation entry (singleton)
+  handover    Show the newest handover, or 'handover create' to write the next
   export      Export entries as markdown or JSON
   version     Print the build version
   completion  Print a shell completion script

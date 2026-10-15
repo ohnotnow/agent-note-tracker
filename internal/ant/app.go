@@ -129,6 +129,8 @@ func (a *App) dispatch(cmd string, args []string) error {
 		return a.For(args)
 	case "foundation":
 		return a.Foundation(args)
+	case "handover":
+		return a.Handover(args)
 	case "export":
 		return a.Export(args)
 	case "version":

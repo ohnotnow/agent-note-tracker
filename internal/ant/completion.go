@@ -12,8 +12,8 @@ _ant_complete() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    local commands="init config add create show edit append delete list recent search for foundation export version completion"
-    local kinds="note adr pivot foundation"
+    local commands="init config add create show edit append delete list recent search for foundation handover export version completion"
+    local kinds="note adr pivot foundation handover"
     # Commands whose first positional argument is an entry id.
     local id_commands="show edit append delete export"
 
@@ -35,6 +35,11 @@ _ant_complete() {
     # 'completion' takes a shell name as its only argument.
     if [ "${cmd}" = "completion" ] && [ "${COMP_CWORD}" -eq 2 ]; then
         COMPREPLY=( $(compgen -W "bash zsh" -- "${cur}") )
+        return
+    fi
+
+    if [ "${cmd}" = "handover" ] && [ "${COMP_CWORD}" -eq 2 ]; then
+        COMPREPLY=( $(compgen -W "create" -- "${cur}") )
         return
     fi
 
@@ -72,11 +77,12 @@ _ant() {
         'search:search entries by query'
         'for:show entries linked to an issue id'
         'foundation:show the project foundation entry'
+        'handover:show the newest handover, or create the next one'
         'export:render entries as markdown or JSON'
         'version:print the build version'
         'completion:print a shell completion script'
     )
-    kinds=(note adr pivot foundation)
+    kinds=(note adr pivot foundation handover)
 
     # Pull entry ids out of 'ant list' JSON. Slim output is one "id" per
     # entry, so a quick grep/sed beats parsing JSON properly.
@@ -95,6 +101,18 @@ _ant() {
         args)
             case ${words[1]} in
                 completion) _values 'shell' bash zsh ;;
+                handover)
+                    if (( CURRENT == 2 )); then
+                        _values 'subcommand' create
+                    else
+                        _arguments \
+                            '--body[entry body, @file, or - for stdin]:body:' \
+                            '--title[entry title]:title:' \
+                            '--issue[linked issue id]:issue:' \
+                            '--human[open $EDITOR to write the body]' \
+                            '--long[return the full record]'
+                    fi
+                    ;;
                 show|delete)
                     _ant_entry_ids
                     ;;
@@ -105,7 +123,7 @@ _ant() {
                         _arguments \
                             '--body[new body, @file, or - for stdin]:body:' \
                             '--title[entry title]:title:' \
-                            '--kind[entry kind]:kind:(note adr pivot foundation)' \
+                            '--kind[entry kind]:kind:(note adr pivot foundation handover)' \
                             '--issue[linked issue id]:issue:' \
                             '--supersedes[id of an earlier entry this one overturns]:id:_ant_entry_ids' \
                             '--supersedes-reason[what was overturned]:reason:' \
@@ -128,7 +146,7 @@ _ant() {
                 export)
                     if [[ "${words[CURRENT]}" == -* ]]; then
                         _arguments \
-                            '--kind[filter by kind]:kind:(note adr pivot foundation)' \
+                            '--kind[filter by kind]:kind:(note adr pivot foundation handover)' \
                             '--issue[filter by issue id]:issue:' \
                             '--since[created_at >= date]:since:' \
                             '--json[emit JSON instead of markdown]'
@@ -140,7 +158,7 @@ _ant() {
                     _arguments \
                         '--body[entry body, @file, or - for stdin]:body:' \
                         '--title[entry title]:title:' \
-                        '--kind[entry kind]:kind:(note adr pivot foundation)' \
+                        '--kind[entry kind]:kind:(note adr pivot foundation handover)' \
                         '--issue[linked issue id]:issue:' \
                         '--supersedes[id of an earlier entry this one overturns]:id:_ant_entry_ids' \
                         '--supersedes-reason[what was overturned]:reason:' \
