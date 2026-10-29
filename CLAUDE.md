@@ -103,3 +103,7 @@ accurate. Breaking changes are acceptable when justified, but the
 user prefers small, considered changes over sweeping refactors. If
 you find yourself wanting to restructure something large, surface
 the idea before doing it.
+
+## Releases
+
+When the work is ready to ship, remind the user about the `tag-release` skill (`.claude/skills/tag-release/SKILL.md`). It checks the repo, agrees and sanity-checks the version, updates the changelog and prints the tag command for the user to run. Releases are immutable on GitHub, so a deleted release's tag name can never be reused (the skill keeps the list of burned names).
