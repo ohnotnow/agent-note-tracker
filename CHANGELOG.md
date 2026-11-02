@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.12.0] - 2026-11-01
+## [1.13.0 - 1.12.0] - 2026-11-01
 ### Fixed
 - `ant edit` without `--body` (changing only `--kind`, `--issue`, `--title`, `--supersedes` or `--unsupersede`) hung when stdin was an open pipe, which is what an agent's shell gives every command. It tried to read a replacement body from stdin and waited for an end-of-input that never came.
 
