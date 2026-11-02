@@ -43,16 +43,43 @@ func TestEdit_UpdateAlias(t *testing.T) {
 	}
 }
 
-func TestEdit_BodyViaStdin(t *testing.T) {
-	ta := newTestApp(t)
-	initDemo(t, ta, "demo")
-	id := addAndID(t, ta)
-	ta.Stdin = strings.NewReader("piped new body\n")
+// failingReader fails the test if anything reads from it. It stands in for
+// an agent's stdin: an open pipe that never sends EOF, so a real read hangs.
+type failingReader struct{ t *testing.T }
 
-	var got Entry
-	ta.run(t, &got, "edit", id, "--long")
-	if got.Body != "piped new body" {
-		t.Errorf("body = %q, want 'piped new body'", got.Body)
+func (r failingReader) Read(_ []byte) (int, error) {
+	r.t.Helper()
+	r.t.Fatal("edit read stdin without --body -")
+	return 0, nil
+}
+
+func TestEdit_WithoutBodyFlagDoesNotReadStdin(t *testing.T) {
+	cases := map[string][]string{
+		"no flags":    {},
+		"kind":        {"--kind", "decision"},
+		"issue":       {"--issue", "ait-123"},
+		"supersedes":  {"--supersedes", "OTHER"},
+		"unsupersede": {"--unsupersede", "OTHER"},
+	}
+	for name, args := range cases {
+		t.Run(name, func(t *testing.T) {
+			ta := newTestApp(t)
+			initDemo(t, ta, "demo")
+			other := addAndID(t, ta)
+			id := addAndID(t, ta, "--supersedes", other)
+			for i, a := range args {
+				if a == "OTHER" {
+					args[i] = other
+				}
+			}
+			ta.Stdin = failingReader{t}
+
+			var got Entry
+			ta.run(t, &got, "edit", append([]string{id, "--long"}, args...)...)
+			if got.Body != "original body" {
+				t.Errorf("body = %q, want 'original body'", got.Body)
+			}
+		})
 	}
 }
 

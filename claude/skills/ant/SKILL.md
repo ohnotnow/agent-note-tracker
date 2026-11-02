@@ -210,10 +210,9 @@ but how it was later revised is in those.
 ```bash
 ant edit <id> --title "New title"         # change one column
 ant edit <id> --issue ""                  # clear a column (empty string)
-echo "new body" | ant edit <id>           # replace body via stdin
 ant edit <id> --body @path/to/new.md      # replace body from file
 ant edit <id> --human                     # rewrite body in $EDITOR (for a person)
-ant edit <id> --body - <<'EOF'            # explicit stdin via heredoc
+ant edit <id> --body - <<'EOF'            # replace body from stdin (heredoc)
 Rewritten body, apostrophes and `backticks` fine.
 EOF
 ```

@@ -27,7 +27,7 @@ mental model the code is shaped around.
 Common commands:
 
 ```bash
-go build -o ant .                # build the binary
+go build -o ant ./cmd/ant        # build the binary
 go test ./...                    # run the full suite (fast — no subprocesses)
 go vet ./...                     # static checks
 ```

@@ -274,7 +274,7 @@ the test suite uses.
 go build -o ant ./cmd/ant
 
 # with a stamped version
-go build -ldflags "-X github.com/ohnotnow/agent-note-tracker/internal/ant.Version=v0.1.0" -o ant .
+go build -ldflags "-X github.com/ohnotnow/agent-note-tracker/internal/ant.Version=v0.1.0" -o ant ./cmd/ant
 ```
 
 A stamped (non-`dev`) build will, on `ant version`, do a best-effort

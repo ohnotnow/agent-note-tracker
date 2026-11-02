@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-11-01
+### Fixed
+- `ant edit` without `--body` (changing only `--kind`, `--issue`, `--title`, `--supersedes` or `--unsupersede`) hung when stdin was an open pipe, which is what an agent's shell gives every command. It tried to read a replacement body from stdin and waited for an end-of-input that never came.
+
+### Changed
+- `ant edit` no longer reads a body from stdin unless you pass `--body -`. `echo "new body" | ant edit <id>` now ignores the pipe; use `--body -` instead. `ant add` and `ant append` still read stdin when `--body` is omitted.
+
 ## [1.11.0] - 2026-10-15
 ### Added
 - A `handover` kind for "where a session got to and what's next", with two commands. `ant handover` prints the newest handover in full, in the same shape as `ant show`, and marks it read so the session can `append` to it. It picks the most recently created handover rather than following supersedes links, so a chain linked wrongly by hand can't hide the current note. `ant handover create` takes the same flags as `ant add`, sets the kind to `handover` and supersedes the previous handover automatically; it refuses `--kind` and `--supersedes`, since either would break the chain. Shell completion knows the new command and kind. The skill now reads `ant handover` at session start and steers standing rules into the project's `CLAUDE.md` instead of the handover, where they would otherwise pile up across a stack of superseded notes.
@@ -108,7 +115,8 @@ First stable release. No code changes from `v0.3.0` — this tag marks the publi
 
 ## [0.1.0] - 2026-05-01
 
-[Unreleased]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.9.0...v1.10.0
 [1.8.0 - 1.9.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.7.0...v1.9.0

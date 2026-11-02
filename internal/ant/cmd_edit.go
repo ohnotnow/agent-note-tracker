@@ -15,16 +15,17 @@ import (
 //
 //	--body <s>    set body to literal <s>
 //	--body @<p>   set body to contents of file <p>
-//	--body -      set body from stdin (explicit)
-//	(stdin)       if --body is not given and stdin has content, set body
-//	--human       open $EDITOR with the current body (ait spelling; --visual
+//	--body -      set body from stdin
+//	--human      open $EDITOR with the current body (ait spelling; --visual
 //	              is accepted as an alias)
 //	--title <s>   set title (empty string clears)
 //	--kind <s>    set kind (rejects empty)
 //	--issue <s>   set issue_id (empty string clears)
 //
 // Flags that aren't passed leave the column unchanged. With no flags at all
-// (and no piped stdin) the call is a read-only no-op that returns the entry.
+// the call is a read-only no-op that returns the entry. Stdin is only read
+// for '--body -': an agent's shell hands commands an open, idle pipe, so an
+// implicit read would block every metadata-only edit until killed.
 //
 // To grow an entry rather than replace it, see 'ant append'.
 func (a *App) Edit(args []string) error {
@@ -196,37 +197,27 @@ func (a *App) Edit(args []string) error {
 }
 
 // resolveEditBody picks the new body for an edit, returning whether body
-// should be updated. Precedence:
-//  1. --body literal or --body @file
-//  2. piped stdin with non-empty content
-//  3. otherwise, leave unchanged
+// should be updated. Without --body the body is left unchanged.
 func (a *App) resolveEditBody(bodyArg string, bodyFlagSet bool) (string, bool, error) {
-	if bodyFlagSet {
-		switch {
-		case bodyArg == "-":
-			body, err := a.readStdinBody()
-			if err != nil {
-				return "", false, err
-			}
-			return body, true, nil
-		case strings.HasPrefix(bodyArg, "@"):
-			path := bodyArg[1:]
-			content, err := os.ReadFile(path)
-			if err != nil {
-				return "", false, fmt.Errorf("read body file %q: %w", path, err)
-			}
-			return strings.TrimRight(string(content), "\n\r\t "), true, nil
-		}
-		return strings.TrimRight(bodyArg, "\n\r\t "), true, nil
-	}
-	body, err := a.readStdinBody()
-	if err != nil {
-		return "", false, err
-	}
-	if body == "" {
+	if !bodyFlagSet {
 		return "", false, nil
 	}
-	return body, true, nil
+	switch {
+	case bodyArg == "-":
+		body, err := a.readStdinBody()
+		if err != nil {
+			return "", false, err
+		}
+		return body, true, nil
+	case strings.HasPrefix(bodyArg, "@"):
+		path := bodyArg[1:]
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return "", false, fmt.Errorf("read body file %q: %w", path, err)
+		}
+		return strings.TrimRight(string(content), "\n\r\t "), true, nil
+	}
+	return strings.TrimRight(bodyArg, "\n\r\t "), true, nil
 }
 
 // setFlags returns the names of flags explicitly passed by the user. Use
