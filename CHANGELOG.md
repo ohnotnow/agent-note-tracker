@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.14.0] - 2026-11-06
 ### Added
 - `ant install-skills` installs the Claude Code skill that is now built into the binary, so a binary and its skill always come from the same release. Missing files are added, identical ones left alone, and a changed copy is replaced only after a `[y/N/d]` prompt (`d` shows the diff), or with `--force`. With no terminal on stdin, as an agent has, a changed copy is left alone and listed rather than prompted for. `--dry-run` only reports; `--dir` picks another Claude config directory.
 - `ant version` now says whether the installed skill matches the one in the binary.
@@ -119,7 +121,8 @@ First stable release. No code changes from `v0.3.0` — this tag marks the publi
 
 ## [0.1.0] - 2026-05-01
 
-[Unreleased]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.13.0...v1.14.0
 [1.12.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/ohnotnow/agent-note-tracker/compare/v1.9.0...v1.10.0
