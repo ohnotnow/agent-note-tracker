@@ -71,13 +71,14 @@ func TestBuildAPIURL(t *testing.T) {
 // Dev builds short-circuit before the network check, so this is testable
 // without touching GitHub. It also confirms the new plain-text contract.
 func TestVersion_DevSkipsNetwork(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
 	ta := newTestApp(t)
 	if err := ta.Dispatch("version", nil); err != nil {
 		t.Fatalf("version: %v", err)
 	}
 	out := ta.stdoutString()
-	if !strings.HasPrefix(out, "ant version dev") {
-		t.Errorf("stdout = %q, want it to start with 'ant version dev'", out)
+	if !strings.HasPrefix(out, "ant version dev\nskills: not installed") {
+		t.Errorf("stdout = %q, want the version then the skills line", out)
 	}
 	if strings.Contains(out, "newer version") || strings.Contains(out, "latest version") {
 		t.Errorf("dev build should not emit release-check output, got %q", out)

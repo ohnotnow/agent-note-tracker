@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -64,6 +65,7 @@ func (a *App) SelfUpdate(args []string) error {
 		home:           home,
 		checkOnly:      check,
 		assumeYes:      yes,
+		afterSwap:      checkNewSkills,
 	})
 }
 
@@ -84,6 +86,9 @@ type selfUpdateConfig struct {
 	home           string
 	checkOnly      bool
 	assumeYes      bool
+	// afterSwap runs once the new binary is in place. Nil in tests, where
+	// the "binary" is a stand-in that can't be run.
+	afterSwap func(target string, out io.Writer)
 }
 
 func runSelfUpdate(cfg selfUpdateConfig) error {
@@ -204,7 +209,23 @@ func runSelfUpdate(cfg selfUpdateConfig) error {
 	}
 
 	fmt.Fprintf(cfg.stdout, "Updated to %s.\n", rel.TagName)
+	if cfg.afterSwap != nil {
+		cfg.afterSwap(cfg.targetPath, cfg.stdout)
+	}
 	return nil
+}
+
+// checkNewSkills asks the newly installed binary, which carries the new
+// skill, how it compares with the installed copy.
+func checkNewSkills(target string, out io.Writer) {
+	fmt.Fprintln(out, "\nThe skill may have changed too:")
+	cmd := exec.Command(target, "install-skills", "--dry-run")
+	cmd.Stdout, cmd.Stderr = out, out
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(out, "(couldn't run the new ant to check: %v)\n", err)
+		return
+	}
+	fmt.Fprintln(out, "Run ant install-skills to bring it up to date.")
 }
 
 // confirmUpdate prints a summary, the release notes, and a y/N prompt,

@@ -94,11 +94,11 @@ func run(args []string) error {
 // reader when stdin is a terminal — keeping commands that fall back to
 // stdin (like 'ant add') from blocking on an interactive prompt.
 //
-// 'self-update' is the exception: its confirmation prompt explicitly wants
-// real stdin so the user can type y/N. Wiring it through the cmd name keeps
-// every other command's terminal-stdin shielding intact.
+// 'self-update' and 'install-skills' are the exceptions: their prompts
+// want real stdin so the user can type an answer. Wiring it through the cmd
+// name keeps every other command's terminal-stdin shielding intact.
 func stdinReader(cmd string) io.Reader {
-	if cmd == "self-update" {
+	if cmd == "self-update" || cmd == "install-skills" {
 		return os.Stdin
 	}
 	if isatty.IsTerminal(os.Stdin.Fd()) {

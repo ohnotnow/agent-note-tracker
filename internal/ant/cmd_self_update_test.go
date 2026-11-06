@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -753,4 +754,36 @@ func asCoded(err error, target **CodedError) bool {
 		err = u.Unwrap()
 	}
 	return false
+}
+
+func TestRunSelfUpdate_ChecksSkillsAfterSwap(t *testing.T) {
+	dir := t.TempDir()
+	target := filepath.Join(dir, "ant")
+	if err := os.WriteFile(target, []byte("old binary"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	fr := newFakeRelease(t, "v9.9.9", "ant-linux-amd64", []byte("new binary"), false)
+
+	var out bytes.Buffer
+	var checked string
+	err := runSelfUpdate(selfUpdateConfig{
+		apiURL:         fr.srv.URL + "/releases/latest",
+		httpClient:     fr.srv.Client(),
+		targetPath:     target,
+		osName:         "linux",
+		arch:           "amd64",
+		stdout:         &out,
+		currentVersion: "v0.1.0",
+		assumeYes:      true,
+		afterSwap: func(path string, _ io.Writer) {
+			got, _ := os.ReadFile(path)
+			checked = string(got)
+		},
+	})
+	if err != nil {
+		t.Fatalf("runSelfUpdate: %v", err)
+	}
+	if checked != "new binary" {
+		t.Errorf("afterSwap should run against the new binary, saw %q", checked)
+	}
 }

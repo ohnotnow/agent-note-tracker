@@ -52,7 +52,9 @@ internal/ant/cmd_*.go            One file per command handler (+ _test.go)
 internal/ant/version.go          Version + ldflags hook
 internal/ant/completion.go       bash/zsh completion scripts
 internal/ant/testapp_test.go     Test harness (newTestApp helper)
-claude/skills/ant/               The Claude skill for using ant
+claudefiles.go                   go:embed of claude/ (must sit at the repo root)
+claude/skills/ant/               The Claude skill for using ant; built into the
+                                 binary and installed by `ant install-skills`
 ```
 
 One command per `cmd_*.go` file with a paired `cmd_*_test.go`. New

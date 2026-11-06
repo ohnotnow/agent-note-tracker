@@ -137,6 +137,8 @@ func (a *App) dispatch(cmd string, args []string) error {
 		return a.Version(args)
 	case "self-update":
 		return a.SelfUpdate(args)
+	case "install-skills":
+		return a.InstallSkills(args)
 	case "completion":
 		return a.Completion(args)
 	default:

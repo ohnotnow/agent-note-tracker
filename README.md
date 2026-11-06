@@ -55,6 +55,26 @@ go install github.com/ohnotnow/agent-note-tracker/cmd/ant@latest      # once tag
 go build -o ant ./cmd/ant
 ```
 
+The Claude Code skill that teaches an agent to use `ant` is built into the
+binary, so each release carries the skill that matches it. Put it in place
+with:
+
+```sh
+ant install-skills             # copies it into ~/.claude/skills/ant/
+ant install-skills --dry-run   # only say what would change
+ant install-skills --force     # replace changed copies without asking
+ant install-skills --dir D     # install into another Claude config dir
+```
+
+Missing files are added and identical ones left alone. If your installed
+copy differs, it asks `[y/N/d]` before replacing it (`d` shows the diff,
+then asks again). With no terminal to ask at, which is what an agent
+running it gets, a changed copy is left as it is and listed instead.
+
+`ant version` tells you whether the installed skill matches the binary,
+and `ant self-update` checks the new release's skill straight after the
+update, so re-run `ant install-skills` whenever either says it differs.
+
 ## Quick start
 
 ```sh
@@ -209,8 +229,9 @@ Two kinds of connection, both shown by `ant show`:
 | `ant foundation` | Print the project's foundation entry, if one has been recorded |
 | `ant handover` | Print the newest handover in full; `ant handover create` writes the next one and supersedes the last |
 | `ant export [<id>]` | Render entries as markdown; `--json` for JSON |
-| `ant version` | Print the build version (and check GitHub for newer releases) |
+| `ant version` | Print the build version, whether the installed skill matches it, and (for releases) whether a newer one is out |
 | `ant self-update` | Update to the latest release; `--check` reports without installing, `--yes` skips the prompt |
+| `ant install-skills` | Install the Claude Code skill built into this binary; `--dry-run`, `--force`, `--dir` |
 | `ant completion {bash,zsh}` | Print a shell completion script |
 
 ## Output
@@ -294,7 +315,9 @@ ant self-update --yes      # skip the prompt
 from the latest GitHub release, verifies it against the published
 `SHA256SUMS`, and atomically replaces the running executable. Release
 notes appear inside the confirmation prompt so there's nothing to
-chase down separately.
+chase down separately. Once the new binary is in place it runs that
+binary's `install-skills --dry-run`, so you can see straight away
+whether the skill changed too.
 
 A few cases short-circuit before any download:
 
@@ -323,7 +346,8 @@ internal/ant/format.go          Markdown rendering
 internal/ant/cmd_*.go           One file per command handler
 internal/ant/version.go         Version + ldflags hook
 internal/ant/completion.go      bash/zsh completion scripts
-claude/SKILL.md                 Claude Code skill documentation
+claudefiles.go                  Embeds claude/ into the binary
+claude/skills/ant/              The Claude Code skill (installed by install-skills)
 ```
 
 ## License

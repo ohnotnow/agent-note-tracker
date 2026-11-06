@@ -25,7 +25,8 @@ var Version = "dev"
 // can override it at link time.
 var RepoURL = "https://github.com/ohnotnow/agent-note-tracker"
 
-// Version handles 'ant version'. Prints a plain-text version line and, for
+// Version handles 'ant version'. Prints a plain-text version line, whether
+// the installed skill matches the one built into this binary, and, for
 // non-dev builds, performs a best-effort GitHub release-check so the user
 // sees a hint when a newer version is available.
 //
@@ -46,6 +47,7 @@ func (a *App) Version(args []string) error {
 	}
 
 	fmt.Fprintf(a.Stdout, "ant version %s\n", Version)
+	fmt.Fprintln(a.Stdout, skillsStatus(skillFiles, defaultClaudeDir()))
 
 	if Version == "dev" {
 		return nil

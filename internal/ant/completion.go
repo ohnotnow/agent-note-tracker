@@ -12,7 +12,7 @@ _ant_complete() {
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
 
-    local commands="init config add create show edit append delete list recent search for foundation handover export version completion"
+    local commands="init config add create show edit append delete list recent search for foundation handover export version install-skills completion"
     local kinds="note adr pivot foundation handover"
     # Commands whose first positional argument is an entry id.
     local id_commands="show edit append delete export"
@@ -80,6 +80,7 @@ _ant() {
         'handover:show the newest handover, or create the next one'
         'export:render entries as markdown or JSON'
         'version:print the build version'
+        'install-skills:install the Claude Code skill built into ant'
         'completion:print a shell completion script'
     )
     kinds=(note adr pivot foundation handover)
