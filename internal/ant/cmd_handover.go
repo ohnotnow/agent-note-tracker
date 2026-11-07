@@ -64,6 +64,13 @@ func (a *App) Handover(args []string) error {
 // --kind and --supersedes are refused rather than overridden, since either
 // would quietly break the chain the command exists to keep.
 func (a *App) handoverCreate(args []string) error {
+	// Help goes straight to add's usage, before the initialised check below,
+	// so it works in a project with no database yet. Only the first argument
+	// is checked: scanning them all would misread a value such as '--title -h'.
+	if len(args) > 0 && (args[0] == "--help" || args[0] == "-h") {
+		return a.Add(args)
+	}
+
 	args, err := canonicaliseAliases(args)
 	if err != nil {
 		return err

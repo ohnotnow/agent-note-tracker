@@ -1,6 +1,8 @@
 package ant
 
 import (
+	"errors"
+	"flag"
 	"strings"
 	"testing"
 )
@@ -108,5 +110,20 @@ func TestHandover_RejectsArgs(t *testing.T) {
 	initDemo(t, ta, "demo")
 	if err := ta.Dispatch("handover", []string{"unexpected"}); err == nil {
 		t.Error("expected error for an unknown positional argument")
+	}
+}
+
+// Help must work before 'ant init': it used to hit the initialised check
+// (needed to find the previous handover) and fail with "uninitialised".
+func TestHandoverCreate_HelpBeforeInit(t *testing.T) {
+	for _, flagName := range []string{"--help", "-h"} {
+		ta := newTestApp(t)
+		err := ta.Dispatch("handover", []string{"create", flagName})
+		if !errors.Is(err, flag.ErrHelp) {
+			t.Fatalf("%s: err = %v, want flag.ErrHelp", flagName, err)
+		}
+		if !strings.Contains(ta.stderrString(), "usage: ant add") {
+			t.Errorf("%s: stderr = %q, want the add usage", flagName, ta.stderrString())
+		}
 	}
 }
