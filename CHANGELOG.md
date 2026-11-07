@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Added
+### Fixed
+- `ant handover create --help` (or `-h`) in a project with no `ant init` yet failed with the "uninitialised" error instead of printing the usage. Help is only spotted as the first argument after `create`, so `ant handover create --body x --help` before init still gives the error.
+
+### Changed
+- `ant self-update` no longer runs the new binary's `install-skills --dry-run` after updating, which listed every file and always said to run `install-skills` even when nothing had changed. It now prints one line: "The skill may have changed too. Run 'ant install-skills --dry-run' to see." `ant version` still reports whether the installed skill matches. The first update *from* 1.14.0 still shows the old listing, because that update runs 1.14.0's code.
 - The README explains how to install the skill for OpenCode (nothing extra: it already reads `~/.claude/skills`) and Codex (`ant install-skills --dir ~/.codex`). The `--dir` help now says it installs into a config directory other than `~/.claude`.
 
 ## [1.14.0] - 2026-11-06
