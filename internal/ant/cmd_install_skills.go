@@ -122,7 +122,7 @@ type installConfig struct {
 func (a *App) InstallSkills(args []string) error {
 	fs := flag.NewFlagSet("install-skills", flag.ContinueOnError)
 	fs.SetOutput(a.Stderr)
-	dir := fs.String("dir", defaultClaudeDir(), "Claude Code config directory")
+	dir := fs.String("dir", defaultClaudeDir(), "config directory to install into, if not ~/.claude")
 	force := fs.Bool("force", false, "replace changed files without asking")
 	dryRun := fs.Bool("dry-run", false, "only say what would change")
 	fs.Usage = func() {

@@ -63,7 +63,7 @@ with:
 ant install-skills             # copies it into ~/.claude/skills/ant/
 ant install-skills --dry-run   # only say what would change
 ant install-skills --force     # replace changed copies without asking
-ant install-skills --dir D     # install into another Claude config dir
+ant install-skills --dir D     # install into a config dir other than ~/.claude
 ```
 
 Missing files are added and identical ones left alone. If your installed
@@ -74,6 +74,25 @@ running it gets, a changed copy is left as it is and listed instead.
 `ant version` tells you whether the installed skill matches the binary,
 and `ant self-update` checks the new release's skill straight after the
 update, so re-run `ant install-skills` whenever either says it differs.
+
+### OpenCode and Codex
+
+The skill uses the shared `SKILL.md` format, so it works in other agents
+too. `--dir` is the root the `claude/` tree is copied under, so the skill
+lands in `<dir>/skills/ant/`.
+
+**OpenCode** already reads skills from `~/.claude/skills`, so a plain
+`ant install-skills` covers it.
+
+**Codex** reads skills from `~/.codex/skills`:
+
+```sh
+ant install-skills --dir ~/.codex
+```
+
+The skill works there as it is. One caveat: `ant version` only checks
+`~/.claude`, so if you have installed the skill only for Codex it will
+report it as not installed.
 
 ## Quick start
 
