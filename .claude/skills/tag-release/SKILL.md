@@ -19,7 +19,7 @@ changed, and once a tag name has been used for one, GitHub refuses to reuse it e
 release and tag are deleted. A wrong tag permanently burns a version number. That is why this
 skill prepares everything but leaves the tag itself to the maintainer.
 
-**Never run `git commit`, `git tag`, `git push`, or `gh release ...`.** The only file this skill
+**Never run `git tag`, `git push`, or `gh release ...`.** The only file this skill
 edits is `CHANGELOG.md`, and only after the maintainer has agreed the version.
 
 ## 1. Gather the state
@@ -78,10 +78,17 @@ Once the version is agreed and checked, edit `CHANGELOG.md`:
 
 Show the maintainer the new entry.
 
-## 5. Hand over the command
+## 5. Do the commits
 
-The changelog edit still needs committing and pushing before the tag. Say so in plain English,
-then print the tag command with the version copied from the changelog heading, so nothing is
+You should have the `agent-commit` cli tool available.  If you do not - give the user the git commit commands
+they should use rolled up into step 6 and skip the rest of this step.
+
+Use the `agent-commit` command to commit the changes for this release.  Bundle them into different commits where that
+make sense.
+
+## 6. Hand over the final tag and push command
+
+Print the tag command with the version copied from the changelog heading, so nothing is
 typed by hand:
 
 ```
