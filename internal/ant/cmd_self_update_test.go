@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -756,7 +755,9 @@ func asCoded(err error, target **CodedError) bool {
 	return false
 }
 
-func TestRunSelfUpdate_ChecksSkillsAfterSwap(t *testing.T) {
+// After updating, self-update only reminds you to check the skill; it no
+// longer runs the new binary's install-skills --dry-run itself.
+func TestRunSelfUpdate_RemindsAboutSkillAfterSwap(t *testing.T) {
 	dir := t.TempDir()
 	target := filepath.Join(dir, "ant")
 	if err := os.WriteFile(target, []byte("old binary"), 0o755); err != nil {
@@ -765,7 +766,6 @@ func TestRunSelfUpdate_ChecksSkillsAfterSwap(t *testing.T) {
 	fr := newFakeRelease(t, "v9.9.9", "ant-linux-amd64", []byte("new binary"), false)
 
 	var out bytes.Buffer
-	var checked string
 	err := runSelfUpdate(selfUpdateConfig{
 		apiURL:         fr.srv.URL + "/releases/latest",
 		httpClient:     fr.srv.Client(),
@@ -775,15 +775,12 @@ func TestRunSelfUpdate_ChecksSkillsAfterSwap(t *testing.T) {
 		stdout:         &out,
 		currentVersion: "v0.1.0",
 		assumeYes:      true,
-		afterSwap: func(path string, _ io.Writer) {
-			got, _ := os.ReadFile(path)
-			checked = string(got)
-		},
 	})
 	if err != nil {
 		t.Fatalf("runSelfUpdate: %v", err)
 	}
-	if checked != "new binary" {
-		t.Errorf("afterSwap should run against the new binary, saw %q", checked)
+	want := "Updated to v9.9.9.\nThe skill may have changed too. Run 'ant install-skills --dry-run' to see.\n"
+	if !strings.HasSuffix(out.String(), want) {
+		t.Errorf("output should end with the update line and the skill reminder, got:\n%s", out.String())
 	}
 }

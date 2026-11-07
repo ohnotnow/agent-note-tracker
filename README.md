@@ -72,8 +72,8 @@ then asks again). With no terminal to ask at, which is what an agent
 running it gets, a changed copy is left as it is and listed instead.
 
 `ant version` tells you whether the installed skill matches the binary,
-and `ant self-update` checks the new release's skill straight after the
-update, so re-run `ant install-skills` whenever either says it differs.
+so re-run `ant install-skills` whenever it says it differs, and after an
+`ant self-update`.
 
 ### OpenCode and Codex
 
@@ -334,9 +334,9 @@ ant self-update --yes      # skip the prompt
 from the latest GitHub release, verifies it against the published
 `SHA256SUMS`, and atomically replaces the running executable. Release
 notes appear inside the confirmation prompt so there's nothing to
-chase down separately. Once the new binary is in place it runs that
-binary's `install-skills --dry-run`, so you can see straight away
-whether the skill changed too.
+chase down separately. Once the new binary is in place it reminds you
+that the skill may have changed too; run `ant install-skills --dry-run`
+to see.
 
 A few cases short-circuit before any download:
 
